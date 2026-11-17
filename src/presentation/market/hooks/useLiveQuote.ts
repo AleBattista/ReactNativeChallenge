@@ -1,11 +1,11 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { useDependencies } from '../../../app/di/DependenciesProvider';
-import type { Quote } from '../../../domain/market';
+import type { AssetInfo, Quote } from '../../../domain/market';
 import type { Listener, Ticker } from '../../../domain/shared';
 
 /**
- * Puente store → React. Re-renderiza SOLO cuando cambia la cotización de
- * `symbol` (el store reemplaza el objeto únicamente si hubo cambio real).
+ * Puente store → React mediante `useSyncExternalStore`.
+ * Re-renderiza SOLO la celda cuyo `symbol` tuvo un cambio real de precio.
  */
 export function useLiveQuote(symbol: Ticker): Quote | undefined {
   const { quoteFeed } = useDependencies();
@@ -13,7 +13,10 @@ export function useLiveQuote(symbol: Ticker): Quote | undefined {
     (listener: Listener) => quoteFeed.subscribe(symbol, listener),
     [quoteFeed, symbol],
   );
-  const getSnapshot = useCallback(() => quoteFeed.getQuote(symbol), [quoteFeed, symbol]);
+  const getSnapshot = useCallback(
+    () => quoteFeed.getQuote(symbol),
+    [quoteFeed, symbol],
+  );
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
@@ -31,11 +34,26 @@ export function useLiveQuoteSelector<T>(
     (listener: Listener) => quoteFeed.subscribe(symbol, listener),
     [quoteFeed, symbol],
   );
-  const getSnapshot = () => selector(quoteFeed.getQuote(symbol));
+  const getSnapshot = useCallback(
+    () => selector(quoteFeed.getQuote(symbol)),
+    [quoteFeed, symbol, selector],
+  );
   return useSyncExternalStore(subscribe, getSnapshot);
+}
+
+/**
+ * Obtiene la metadata estática del activo (`description`, `currency`, `market`)
+ * desde el `QuoteFeed` sin pasar objetos pesados por las props de la lista.
+ */
+export function useAssetInfo(symbol: Ticker): AssetInfo | undefined {
+  const { quoteFeed } = useDependencies();
+  return quoteFeed.getAssetInfo(symbol);
 }
 
 export function useMarketSymbols(): readonly Ticker[] {
   const { quoteFeed } = useDependencies();
-  return useSyncExternalStore(quoteFeed.subscribeToSymbols, quoteFeed.getSymbols);
+  return useSyncExternalStore(
+    quoteFeed.subscribeToSymbols,
+    quoteFeed.getSymbols,
+  );
 }

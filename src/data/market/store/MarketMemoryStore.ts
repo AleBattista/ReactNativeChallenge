@@ -1,4 +1,4 @@
-import type { Quote, QuoteFeed } from '../../../domain/market';
+import type { AssetInfo, Quote, QuoteFeed } from '../../../domain/market';
 import type { Listener, Ticker, Unsubscribe } from '../../../domain/shared';
 
 /** Actualización parcial de una cotización (lo que trae un tick). */
@@ -59,6 +59,7 @@ const sameSymbols = (a: readonly Ticker[], b: readonly Ticker[]): boolean =>
  */
 export class MarketMemoryStore implements QuoteFeed {
   private quotes = new Map<Ticker, Quote>();
+  private assetInfoBySymbol = new Map<Ticker, AssetInfo>();
   private symbols: readonly Ticker[] = [];
   private readonly listenersBySymbol = new Map<Ticker, Set<Listener>>();
   private readonly symbolsListeners = new Set<Listener>();
@@ -71,6 +72,9 @@ export class MarketMemoryStore implements QuoteFeed {
   // ---- Lectura (QuoteFeed). Arrow fns: se pasan sin bind a useSyncExternalStore.
 
   getQuote = (symbol: Ticker): Quote | undefined => this.quotes.get(symbol);
+
+  getAssetInfo = (symbol: Ticker): AssetInfo | undefined =>
+    this.assetInfoBySymbol.get(symbol);
 
   getSymbols = (): readonly Ticker[] => this.symbols;
 
@@ -103,7 +107,15 @@ export class MarketMemoryStore implements QuoteFeed {
   // ---- Escritura (solo la usan repositorios / LiveQuoteSource).
 
   /** Carga inicial o refresh completo: reemplaza el universo de símbolos. */
-  hydrate(quotes: readonly Quote[]): void {
+  hydrate(quotes: readonly Quote[], assetsInfo?: readonly AssetInfo[]): void {
+    if (assetsInfo) {
+      const nextInfo = new Map<Ticker, AssetInfo>();
+      for (const info of assetsInfo) {
+        nextInfo.set(info.symbol, info);
+      }
+      this.assetInfoBySymbol = nextInfo;
+    }
+
     const next = new Map<Ticker, Quote>();
     for (const quote of quotes) {
       const prev = this.quotes.get(quote.symbol);
@@ -148,6 +160,7 @@ export class MarketMemoryStore implements QuoteFeed {
   /** Solo tests. */
   reset(): void {
     this.quotes = new Map();
+    this.assetInfoBySymbol = new Map();
     this.symbols = [];
     this.listenersBySymbol.clear();
     this.symbolsListeners.clear();

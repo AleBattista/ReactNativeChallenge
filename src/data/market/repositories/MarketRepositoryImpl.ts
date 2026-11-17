@@ -40,7 +40,10 @@ export class MarketRepositoryImpl implements MarketRepository {
     }
 
     this.assets = new Map(mapped.assets.map(asset => [asset.symbol, asset]));
-    this.store.hydrate(mapped.assets.map(asset => asset.quote));
+    this.store.hydrate(
+      mapped.assets.map(asset => asset.quote),
+      mapped.assets,
+    );
     return ok(mapped.assets);
   }
 

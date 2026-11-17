@@ -1,4 +1,5 @@
 import type { Listener, Ticker, Unsubscribe } from '../../shared';
+import type { AssetInfo } from '../entities/Asset';
 import type { Quote } from '../entities/Quote';
 
 /**
@@ -12,6 +13,7 @@ import type { Quote } from '../entities/Quote';
  */
 export interface QuoteFeed {
   getQuote(symbol: Ticker): Quote | undefined;
+  getAssetInfo(symbol: Ticker): AssetInfo | undefined;
   subscribe(symbol: Ticker, listener: Listener): Unsubscribe;
 
   /** Universo de símbolos disponibles (cambia solo al rehidratar). */
