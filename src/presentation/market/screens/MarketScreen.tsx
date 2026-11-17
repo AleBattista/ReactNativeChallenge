@@ -1,27 +1,33 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { useTheme } from '../../../core/theme';
+import { useTheme } from '../../../core/theme/ThemeProvider';
 import type { Ticker } from '../../../domain/shared';
 import type { MainTabScreenProps } from '../../navigation/types';
-import { AppButton, AppText, Card } from '../../shared/components';
+import { AppButton } from '../../shared/components/AppButton';
+import { AppText } from '../../shared/components/AppText';
+import { Card } from '../../shared/components/Card';
 import {
   MARKET_ITEM_ROW_HEIGHT,
   MarketItemRow,
-  MarketSearchBar,
-} from '../components';
-import { useMarketCatalog } from '../hooks';
+} from '../components/MarketItemRow';
+import { MarketSearchBar } from '../components/MarketSearchBar';
+import { useMarketCatalog } from '../hooks/useMarketCatalog';
+
+/**
+ * Constante local de respaldo en caso de re-evaluación circular de módulos en Metro.
+ */
+const ESTIMATED_ROW_HEIGHT = MARKET_ITEM_ROW_HEIGHT ?? 76;
 
 type Props = MainTabScreenProps<'Market'>;
 
 /**
  * Pantalla principal de Mercado:
  *  - Renderiza 2.100+ activos a 60 FPS usando `@shopify/flash-list` con
- *    `estimatedItemSize={MARKET_ITEM_ROW_HEIGHT}`.
- *  - Pasa únicamente `Ticker` (string) como ítem a `FlashList`: los ticks de
- *    precios en vivo no alteran la colección de la lista y solo re-renderizan
- *    la celda afectada mediante `useSyncExternalStore`.
- *  - Filtra instantáneamente en memoria por símbolo o descripción.
+ *    `estimatedItemSize={ESTIMATED_ROW_HEIGHT}`.
+ *  - Gestiona localmente qué filas están expandidas mediante un `Set<Ticker>`
+ *    (`expandedTickers`), sin contaminar el estado global de Zustand.
+ *  - Pasa `isExpanded` y `onToggle(ticker)` estables a cada `MarketItemRow`.
  */
 export function MarketScreen({ navigation }: Props) {
   const { colors, spacing } = useTheme();
@@ -38,31 +44,83 @@ export function MarketScreen({ navigation }: Props) {
     refresh,
   } = useMarketCatalog();
 
-  const handlePressItem = useCallback(
+  // Estado local de expansión con Set<Ticker>, fuera de Zustand
+  const [expandedTickers, setExpandedTickers] = useState<ReadonlySet<Ticker>>(
+    () => new Set<Ticker>(),
+  );
+
+  const handleToggleExpand = useCallback((ticker: Ticker) => {
+    if (!ticker) {
+      return;
+    }
+    setExpandedTickers(prev => {
+      const next = new Set(prev);
+      if (next.has(ticker)) {
+        next.delete(ticker);
+      } else {
+        next.add(ticker);
+      }
+      return next;
+    });
+  }, []);
+
+  const handlePressDetail = useCallback(
     (symbol: Ticker) => {
+      if (!symbol) {
+        return;
+      }
       navigation.navigate('OrderModal', { symbol, side: 'BUY' });
     },
     [navigation],
   );
 
   const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<Ticker>) => (
-      <MarketItemRow ticker={item} onPress={handlePressItem} />
-    ),
-    [handlePressItem],
+    ({ item }: ListRenderItemInfo<Ticker>) => {
+      if (!item) {
+        return null;
+      }
+      return (
+        <MarketItemRow
+          ticker={item}
+          isExpanded={Boolean(expandedTickers?.has(item))}
+          onToggle={handleToggleExpand}
+          onPressDetail={handlePressDetail}
+        />
+      );
+    },
+    [expandedTickers, handleToggleExpand, handlePressDetail],
   );
 
-  const keyExtractor = useCallback((item: Ticker) => item, []);
+  const keyExtractor = useCallback(
+    (item: Ticker, index: number) => item ?? `row-${index}`,
+    [],
+  );
+
+  // Separa los pools de reciclaje de FlashList entre celdas colapsadas y expandidas
+  const getItemType = useCallback(
+    (item: Ticker) =>
+      item && expandedTickers?.has(item) ? 'expanded' : 'collapsed',
+    [expandedTickers],
+  );
+
+  const safeFilteredSymbols = filteredSymbols ?? [];
+  const safeSearchQuery = searchQuery ?? '';
 
   if (status === 'loading') {
     return (
       <View
         style={[
           styles.centered,
-          { backgroundColor: colors.background, padding: spacing.xl, gap: spacing.md },
+          {
+            backgroundColor: colors.background,
+            padding: spacing.xl,
+            gap: spacing.md,
+          },
         ]}>
         <ActivityIndicator size="large" color={colors.accent} />
-        <AppText variant="bodyStrong">Cargando mercado (2.100+ activos)...</AppText>
+        <AppText variant="bodyStrong">
+          Cargando mercado (2.100+ activos)...
+        </AppText>
         <AppText variant="caption" color="textSecondary">
           Conectando cotizaciones en tiempo real
         </AppText>
@@ -82,7 +140,8 @@ export function MarketScreen({ navigation }: Props) {
             Error de conexión
           </AppText>
           <AppText color="textSecondary">
-            {errorMessage ?? 'No se pudieron obtener las cotizaciones del mercado.'}
+            {errorMessage ??
+              'No se pudieron obtener las cotizaciones del mercado.'}
           </AppText>
           <AppButton
             label="Reintentar carga"
@@ -97,11 +156,11 @@ export function MarketScreen({ navigation }: Props) {
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <MarketSearchBar
-        value={searchQuery}
+        value={safeSearchQuery}
         onChangeText={setSearchQuery}
         onClear={clearSearch}
-        resultCount={filteredSymbols.length}
-        totalCount={totalCount}
+        resultCount={safeFilteredSymbols.length}
+        totalCount={totalCount ?? 0}
       />
 
       {errorMessage ? (
@@ -123,19 +182,26 @@ export function MarketScreen({ navigation }: Props) {
 
       <View style={styles.listContainer}>
         <FlashList<Ticker>
-          data={filteredSymbols}
+          data={safeFilteredSymbols}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          estimatedItemSize={MARKET_ITEM_ROW_HEIGHT}
-          drawDistance={MARKET_ITEM_ROW_HEIGHT * 8}
-          refreshing={isRefreshing}
+          getItemType={getItemType}
+          extraData={expandedTickers}
+          estimatedItemSize={ESTIMATED_ROW_HEIGHT}
+          drawDistance={ESTIMATED_ROW_HEIGHT * 8}
+          maintainVisibleContentPosition={{ disabled: false }}
+          refreshing={Boolean(isRefreshing)}
           onRefresh={refresh}
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={
-            <View style={[styles.emptyState, { padding: spacing.xl, gap: spacing.sm }]}>
+            <View
+              style={[
+                styles.emptyState,
+                { padding: spacing.xl, gap: spacing.sm },
+              ]}>
               <AppText variant="bodyStrong">Sin resultados</AppText>
               <AppText variant="caption" color="textSecondary">
-                {`No se encontraron activos que coincidan con "${searchQuery.trim()}".`}
+                {`No se encontraron activos que coincidan con "${safeSearchQuery.trim()}".`}
               </AppText>
             </View>
           }
@@ -168,3 +234,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+export default MarketScreen;

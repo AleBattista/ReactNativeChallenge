@@ -1,6 +1,6 @@
 import React, { type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { useTheme } from '../../../core/theme';
+import { useTheme } from '../../../core/theme/ThemeProvider';
 import { AppText } from './AppText';
 import { Card } from './Card';
 
@@ -18,17 +18,24 @@ export interface ScreenPlaceholderProps {
 }
 
 /**
- * Esqueleto temporal de pantalla. Muestra el nombre en grande, usa solo
- * tokens del tema (Dark/Light) y expone el estado de la inyección de deps.
- * Se elimina cuando cada feature implemente su UI real.
+ * Esqueleto base de pantalla. Muestra el nombre en grande, usa solo tokens del
+ * tema (Dark/Light) y expone el estado de la inyección de dependencias.
  */
-export function ScreenPlaceholder({ title, subtitle, checks, children }: ScreenPlaceholderProps) {
+export function ScreenPlaceholder({
+  title,
+  subtitle,
+  checks,
+  children,
+}: ScreenPlaceholderProps) {
   const { colors, spacing } = useTheme();
 
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}
-      contentContainerStyle={[styles.content, { padding: spacing.xl, gap: spacing.lg }]}>
+      contentContainerStyle={[
+        styles.content,
+        { padding: spacing.xl, gap: spacing.lg },
+      ]}>
       <View style={{ gap: spacing.xs }}>
         <AppText variant="display" accessibilityRole="header">
           {title}
@@ -43,7 +50,9 @@ export function ScreenPlaceholder({ title, subtitle, checks, children }: ScreenP
             <AppText variant="caption" color="textSecondary">
               {check.label}
             </AppText>
-            <AppText variant="caption" color={check.resolved ? 'positive' : 'negative'}>
+            <AppText
+              variant="caption"
+              color={check.resolved ? 'positive' : 'negative'}>
               {check.resolved ? '✓ resuelta' : '✗ faltante'}
             </AppText>
           </View>
@@ -59,3 +68,5 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1 },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
 });
+
+export default ScreenPlaceholder;

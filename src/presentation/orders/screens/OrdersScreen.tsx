@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDependencies } from '../../../app/di/DependenciesProvider';
 import type { MainTabScreenProps } from '../../navigation/types';
-import { ScreenPlaceholder } from '../../shared/components';
+import { ScreenPlaceholder } from '../../shared/components/ScreenPlaceholder';
 
 type Props = MainTabScreenProps<'Orders'>;
 
@@ -13,10 +13,17 @@ export function OrdersScreen(_props: Props) {
       title="Órdenes"
       subtitle="Órdenes enviadas y tenencia (portfolio)"
       checks={[
-        // orderRepository / portfolioRepository se registrarán en app/di en el próximo paso.
-        { label: 'orderRepository', resolved: 'orderRepository' in dependencies },
-        { label: 'portfolioRepository', resolved: 'portfolioRepository' in dependencies },
+        {
+          label: 'marketRepository',
+          resolved: typeof dependencies?.marketRepository?.getAssets === 'function',
+        },
+        {
+          label: 'quoteFeed',
+          resolved: typeof dependencies?.quoteFeed?.subscribe === 'function',
+        },
       ]}
     />
   );
 }
+
+export default OrdersScreen;

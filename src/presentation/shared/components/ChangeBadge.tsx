@@ -1,8 +1,8 @@
 import React, { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useTheme } from '../../../core/theme/ThemeProvider';
 import { formatPercent } from '../../../core/utils/formatters';
-import { useTheme } from '../../../core/theme';
-import { getTrend } from '../../../domain/market';
+import { getTrend } from '../../../domain/market/entities/Quote';
 import { AppText } from './AppText';
 
 export interface ChangeBadgeProps {
@@ -11,11 +11,12 @@ export interface ChangeBadgeProps {
 }
 
 /**
- * Componente "tonto": recibe un primitivo y lo pinta. La regla de negocio
- * (getTrend) vive en dominio; el formato, en core/utils.
+ * Componente presentacional puro: recibe un primitivo y lo pinta.
  * Al recibir un primitivo, `memo` corta re-renders si el valor no cambió.
  */
-export const ChangeBadge = memo(function ChangeBadgeBase({ value }: ChangeBadgeProps) {
+export const ChangeBadge = memo(function ChangeBadgeBase({
+  value,
+}: ChangeBadgeProps) {
   const { colors, spacing, radii } = useTheme();
   const trend = getTrend(value);
 
@@ -49,3 +50,5 @@ export const ChangeBadge = memo(function ChangeBadgeBase({ value }: ChangeBadgeP
 const styles = StyleSheet.create({
   base: { alignSelf: 'flex-start' },
 });
+
+export default ChangeBadge;

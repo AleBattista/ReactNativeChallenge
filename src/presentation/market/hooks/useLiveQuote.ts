@@ -47,7 +47,7 @@ export function useLiveQuoteSelector<T>(
  */
 export function useAssetInfo(symbol: Ticker): AssetInfo | undefined {
   const { quoteFeed } = useDependencies();
-  return quoteFeed.getAssetInfo(symbol);
+  return quoteFeed?.getAssetInfo?.(symbol);
 }
 
 export function useMarketSymbols(): readonly Ticker[] {

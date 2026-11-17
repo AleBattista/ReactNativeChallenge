@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { StyleSheet, View, type ViewProps } from 'react-native';
-import { useTheme, type Spacing } from '../../../core/theme';
+import { useTheme } from '../../../core/theme/ThemeProvider';
+import type { Spacing } from '../../../core/theme/tokens';
 
 export interface CardProps extends ViewProps {
   readonly padding?: Spacing;
@@ -34,3 +35,5 @@ export const Card = memo(function CardBase({
 const styles = StyleSheet.create({
   base: { borderWidth: StyleSheet.hairlineWidth },
 });
+
+export default Card;

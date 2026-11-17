@@ -1,8 +1,8 @@
 import React, { memo } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { useTheme } from '../../../core/theme';
+import { useTheme } from '../../../core/theme/ThemeProvider';
 import { formatQuantity } from '../../../core/utils/formatters';
-import { AppText } from '../../shared/components';
+import { AppText } from '../../shared/components/AppText';
 
 export interface MarketSearchBarProps {
   readonly value: string;
@@ -131,3 +131,6 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
 });
+
+export default MarketSearchBar;
+

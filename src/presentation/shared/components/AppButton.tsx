@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { useTheme } from '../../../core/theme';
+import { useTheme } from '../../../core/theme/ThemeProvider';
 import { AppText } from './AppText';
 
 export interface AppButtonProps {
@@ -35,7 +35,9 @@ export const AppButton = memo(function AppButtonBase({
           opacity: pressed ? 0.8 : 1,
         },
       ]}>
-      <AppText variant="bodyStrong" color={isPrimary ? 'onAccent' : 'textPrimary'}>
+      <AppText
+        variant="bodyStrong"
+        color={isPrimary ? 'onAccent' : 'textPrimary'}>
         {label}
       </AppText>
     </Pressable>
@@ -45,3 +47,5 @@ export const AppButton = memo(function AppButtonBase({
 const styles = StyleSheet.create({
   base: { alignItems: 'center', borderWidth: StyleSheet.hairlineWidth },
 });
+
+export default AppButton;

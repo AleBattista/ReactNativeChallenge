@@ -2,7 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
 import { Platform, StatusBar } from 'react-native';
-import { useTheme } from '../../core/theme';
+import { useTheme } from '../../core/theme/ThemeProvider';
 import { OrderModalScreen } from '../orders/screens/OrderModalScreen';
 import { MainTabNavigator } from './MainTabNavigator';
 import { toNavigationTheme } from './navigationTheme';
@@ -11,14 +11,14 @@ import type { RootStackParamList } from './types';
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 
 /**
- * Árbol de navegación:
+ * Árbol de navegación raíz:
  *
  *   RootStack (native-stack)
  *   ├── MainTabs (bottom-tabs)
  *   │   ├── Market
  *   │   ├── Favorites
  *   │   └── Orders
- *   └── OrderModal  ← presentation: 'modal' (nativo: sheet en iOS)
+ *   └── OrderModal  ← presentation: 'modal'
  */
 export function AppNavigator() {
   const theme = useTheme();
@@ -26,9 +26,11 @@ export function AppNavigator() {
 
   return (
     <NavigationContainer theme={navigationTheme}>
-<StatusBar
+      <StatusBar
         barStyle={theme.scheme === 'dark' ? 'light-content' : 'dark-content'}
-        {...(Platform.OS === 'android' ? { backgroundColor: theme.colors.surface } : {})}
+        {...(Platform.OS === 'android'
+          ? { backgroundColor: theme.colors.surface }
+          : {})}
       />
       <RootStack.Navigator initialRouteName="MainTabs">
         <RootStack.Screen
@@ -46,10 +48,14 @@ export function AppNavigator() {
           <RootStack.Screen
             name="OrderModal"
             component={OrderModalScreen}
-            options={({ route }) => ({ title: `Operar ${route.params.symbol}` })}
+            options={({ route }) => ({
+              title: `Operar ${route.params?.symbol ?? ''}`.trim(),
+            })}
           />
         </RootStack.Group>
       </RootStack.Navigator>
     </NavigationContainer>
   );
 }
+
+export default AppNavigator;

@@ -20,3 +20,6 @@ export const useDependencies = (): Dependencies => {
   }
   return deps;
 };
+
+export default DependenciesProvider;
+

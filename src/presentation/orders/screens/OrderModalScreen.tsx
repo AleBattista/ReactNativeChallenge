@@ -1,21 +1,33 @@
 import React from 'react';
 import { useDependencies } from '../../../app/di/DependenciesProvider';
 import type { RootStackScreenProps } from '../../navigation/types';
-import { AppButton, ScreenPlaceholder } from '../../shared/components';
+import { AppButton } from '../../shared/components/AppButton';
+import { ScreenPlaceholder } from '../../shared/components/ScreenPlaceholder';
 
 type Props = RootStackScreenProps<'OrderModal'>;
 
 export function OrderModalScreen({ route, navigation }: Props) {
-  // `route.params` está tipado: symbol es Ticker y side es OrderSide | undefined.
-  const { symbol, side } = route.params;
+  const symbol = route.params?.symbol ?? '—';
+  const side = route.params?.side;
   const { quoteFeed } = useDependencies();
 
   return (
     <ScreenPlaceholder
       title="Order Modal"
       subtitle={`${side ?? 'BUY/SELL'} · ${symbol}`}
-      checks={[{ label: 'quoteFeed', resolved: typeof quoteFeed.getQuote === 'function' }]}>
-      <AppButton label="Cerrar" variant="secondary" onPress={navigation.goBack} />
+      checks={[
+        {
+          label: 'quoteFeed',
+          resolved: typeof quoteFeed?.getQuote === 'function',
+        },
+      ]}>
+      <AppButton
+        label="Cerrar"
+        variant="secondary"
+        onPress={navigation.goBack}
+      />
     </ScreenPlaceholder>
   );
 }
+
+export default OrderModalScreen;

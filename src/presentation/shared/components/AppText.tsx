@@ -1,10 +1,19 @@
 import React, { memo } from 'react';
 import { Text, type TextProps } from 'react-native';
-import { useTheme, type ThemeColors, type TypographyVariant } from '../../../core/theme';
+import { useTheme } from '../../../core/theme/ThemeProvider';
+import type { ThemeColors } from '../../../core/theme/themes';
+import type { TypographyVariant } from '../../../core/theme/tokens';
 
 type TextColor = keyof Pick<
   ThemeColors,
-  'textPrimary' | 'textSecondary' | 'textMuted' | 'positive' | 'negative' | 'neutral' | 'accent' | 'onAccent'
+  | 'textPrimary'
+  | 'textSecondary'
+  | 'textMuted'
+  | 'positive'
+  | 'negative'
+  | 'neutral'
+  | 'accent'
+  | 'onAccent'
 >;
 
 export interface AppTextProps extends TextProps {
@@ -27,3 +36,5 @@ export const AppText = memo(function AppTextBase({
     />
   );
 });
+
+export default AppText;

@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
-interface TabIconProps {
+export interface TabIconProps {
   readonly glyph: string;
   readonly color: string;
   readonly size: number;
@@ -9,8 +9,8 @@ interface TabIconProps {
 }
 
 /**
- * Ícono mínimo basado en glifos Unicode (sin librería de íconos todavía).
- * Se reemplaza por react-native-svg / vector-icons sin tocar el navigator.
+ * Ícono mínimo basado en glifos Unicode (sin librería de íconos externa).
+ * Exportación dual (named + default) para evitar fallos de resolución en Metro.
  */
 export const TabIcon = memo(function TabIconBase({
   glyph,
@@ -34,3 +34,5 @@ const styles = StyleSheet.create({
   focused: { opacity: 1 },
   unfocused: { opacity: 0.8 },
 });
+
+export default TabIcon;

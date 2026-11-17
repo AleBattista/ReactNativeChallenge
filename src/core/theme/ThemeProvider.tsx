@@ -66,3 +66,6 @@ export const useThemePreference = () => {
   const { preference, setPreference } = useThemeContext();
   return { preference, setPreference } as const;
 };
+
+export default ThemeProvider;
+

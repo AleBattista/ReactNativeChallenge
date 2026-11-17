@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createDependencies } from './src/app/di/container';
 import { DependenciesProvider } from './src/app/di/DependenciesProvider';
-import { ThemeProvider } from './src/core/theme';
+import { ThemeProvider } from './src/core/theme/ThemeProvider';
 import { AppNavigator } from './src/presentation/navigation/AppNavigator';
 
 /**

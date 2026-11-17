@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import { useTheme } from '../../core/theme';
+import { useTheme } from '../../core/theme/ThemeProvider';
 import { FavoritesScreen } from '../favorites/screens/FavoritesScreen';
 import { MarketScreen } from '../market/screens/MarketScreen';
 import { OrdersScreen } from '../orders/screens/OrdersScreen';
@@ -16,11 +16,20 @@ interface TabIconRenderProps {
 }
 
 // Definidos fuera del render: evita recrear componentes en cada render
-// (regla react/no-unstable-nested-components).
-const marketIcon = (props: TabIconRenderProps) => <TabIcon glyph="▲" {...props} />;
-const favoritesIcon = (props: TabIconRenderProps) => <TabIcon glyph="★" {...props} />;
-const ordersIcon = (props: TabIconRenderProps) => <TabIcon glyph="≡" {...props} />;
+const renderMarketIcon = (props: TabIconRenderProps) => (
+  <TabIcon glyph="▲" {...props} />
+);
+const renderFavoritesIcon = (props: TabIconRenderProps) => (
+  <TabIcon glyph="★" {...props} />
+);
+const renderOrdersIcon = (props: TabIconRenderProps) => (
+  <TabIcon glyph="≡" {...props} />
+);
 
+/**
+ * Navegador de solapas inferiores (Mercado, Favoritos, Órdenes).
+ * Exportado de forma nombrada y por defecto.
+ */
 export function MainTabNavigator() {
   const { colors } = useTheme();
 
@@ -30,7 +39,10 @@ export function MainTabNavigator() {
       screenOptions={{
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+        },
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.textPrimary,
         headerShadowVisible: false,
@@ -38,18 +50,20 @@ export function MainTabNavigator() {
       <Tab.Screen
         name="Market"
         component={MarketScreen}
-        options={{ title: 'Mercado', tabBarIcon: marketIcon }}
+        options={{ title: 'Mercado', tabBarIcon: renderMarketIcon }}
       />
       <Tab.Screen
         name="Favorites"
         component={FavoritesScreen}
-        options={{ title: 'Favoritos', tabBarIcon: favoritesIcon }}
+        options={{ title: 'Favoritos', tabBarIcon: renderFavoritesIcon }}
       />
       <Tab.Screen
         name="Orders"
         component={OrdersScreen}
-        options={{ title: 'Órdenes', tabBarIcon: ordersIcon }}
+        options={{ title: 'Órdenes', tabBarIcon: renderOrdersIcon }}
       />
     </Tab.Navigator>
   );
 }
+
+export default MainTabNavigator;
