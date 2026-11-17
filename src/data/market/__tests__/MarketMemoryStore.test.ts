@@ -75,7 +75,8 @@ describe('MarketMemoryStore', () => {
     store.hydrate(quotes());
     flush();
     expect(onSymbols).toHaveBeenCalledTimes(1);
-    expect(store.getSymbols()).toEqual(['AGRO', 'ALUA']);
+    expect(store.getSymbols().slice(0, 2)).toEqual(['AGRO', 'ALUA']);
+    expect(store.getSymbols()).toHaveLength(fixture.assetPrices.length);
 
     const listener = jest.fn();
     const unsubscribe = store.subscribe('AGRO', listener);
@@ -89,7 +90,7 @@ describe('MarketMemoryStore', () => {
     const { store, flush } = createManualStore();
     store.hydrate(quotes());
     flush();
-    store.applyPatches([{ symbol: 'GGAL', lastPrice: 1 }]);
-    expect(store.getQuote('GGAL')).toBeUndefined();
+    store.applyPatches([{ symbol: 'UNKNOWN_TICKER', lastPrice: 1 }]);
+    expect(store.getQuote('UNKNOWN_TICKER')).toBeUndefined();
   });
 });

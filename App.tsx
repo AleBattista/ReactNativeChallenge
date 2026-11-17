@@ -1,45 +1,32 @@
+import React, { useMemo } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { createDependencies } from './src/app/di/container';
+import { DependenciesProvider } from './src/app/di/DependenciesProvider';
+import { ThemeProvider } from './src/core/theme';
+import { AppNavigator } from './src/presentation/navigation/AppNavigator';
+
 /**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
+ * Orden de los providers en la raíz:
+ *  1. SafeAreaProvider (métricas nativas de pantalla)
+ *  2. DependenciesProvider (contenedor de Clean Architecture, referencia única y estable)
+ *  3. ThemeProvider (tokens Dark/Light; envuelve a AppNavigator para que useTheme() funcione en el navigator y pantallas)
+ *  4. AppNavigator (NavigationContainer + RootStack + MainTabs)
  */
-
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
-
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+export function App() {
+  const dependencies = useMemo(() => createDependencies(), []);
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <DependenciesProvider value={dependencies}>
+        <ThemeProvider>
+          <AppNavigator />
+        </ThemeProvider>
+      </DependenciesProvider>
     </SafeAreaProvider>
   );
 }
 
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
+export default App;
 
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
 
 export default App;

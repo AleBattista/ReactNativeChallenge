@@ -7,7 +7,8 @@ describe('mapAssetPricesResponse', () => {
   it('mapea el fixture a entidades de dominio', () => {
     const result = mapAssetPricesResponse(fixture, NOW);
     expect(result?.rejected).toBe(0);
-    expect(result?.assets.map(a => a.symbol)).toEqual(['AGRO', 'ALUA']);
+    expect(result?.assets.length).toBe(fixture.assetPrices.length);
+    expect(result?.assets.slice(0, 2).map(a => a.symbol)).toEqual(['AGRO', 'ALUA']);
   });
 
   it('normaliza ultimoCierre: 0 a previousClose null (caso ALUA)', () => {
@@ -30,7 +31,7 @@ describe('mapAssetPricesResponse', () => {
       { assetPrices: [...fixture.assetPrices, { symbol: 'BAD' }, { ...fixture.assetPrices[0], symbol: 'X', currency: 'EUR' }] },
       NOW,
     );
-    expect(result?.assets).toHaveLength(2);
+    expect(result?.assets).toHaveLength(fixture.assetPrices.length);
     expect(result?.rejected).toBe(2);
   });
 
