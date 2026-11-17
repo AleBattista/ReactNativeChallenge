@@ -1,8 +1,12 @@
-import React, { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
+import {
+  useSettingsStore,
+  type ThemePreference,
+} from '../../app/store/SettingsStore';
 import { themes, type ColorScheme, type Theme } from './themes';
 
-export type ThemePreference = ColorScheme | 'system';
+export type { ThemePreference } from '../../app/store/SettingsStore';
 
 interface ThemeContextValue {
   readonly theme: Theme;
@@ -18,19 +22,31 @@ interface ThemeProviderProps {
 }
 
 /**
- * El tema cambia rarísima vez, por eso Context es adecuado aquí
- * (a diferencia de los precios, que NUNCA pasan por Context).
+ * Proveedor de tema conectado a `SettingsStore` (Zustand + AsyncStorage) para
+ * que la preferencia `'light' | 'dark' | 'system'` persista entre sesiones.
  */
-export function ThemeProvider({ children, initialPreference = 'system' }: ThemeProviderProps) {
+export function ThemeProvider({ children, initialPreference }: ThemeProviderProps) {
   const systemScheme = useColorScheme();
-  const [preference, setPreference] = useState<ThemePreference>(initialPreference);
+  const preference = useSettingsStore(state => state.themePreference);
+  const setPreference = useSettingsStore(state => state.setThemePreference);
 
+  useEffect(() => {
+    if (initialPreference !== undefined) {
+      setPreference(initialPreference);
+    }
+  }, [initialPreference, setPreference]);
+
+  const effectivePreference = initialPreference ?? preference;
   const scheme: ColorScheme =
-    preference === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : preference;
+    effectivePreference === 'system'
+      ? systemScheme === 'dark'
+        ? 'dark'
+        : 'light'
+      : effectivePreference;
 
   const value = useMemo<ThemeContextValue>(
-    () => ({ theme: themes[scheme], preference, setPreference }),
-    [scheme, preference],
+    () => ({ theme: themes[scheme], preference: effectivePreference, setPreference }),
+    [scheme, effectivePreference, setPreference],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
