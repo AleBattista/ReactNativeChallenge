@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
 import { Platform, StatusBar } from 'react-native';
 import { useTheme } from '../../core/theme/ThemeProvider';
+import { AssetDetailScreen } from '../market/screens/AssetDetailScreen';
 import { OrderModalScreen } from '../orders/screens/OrderModalScreen';
 import { MainTabNavigator } from './MainTabNavigator';
 import { toNavigationTheme } from './navigationTheme';
@@ -18,6 +19,7 @@ const RootStack = createNativeStackNavigator<RootStackParamList>();
  *   │   ├── Market
  *   │   ├── Favorites
  *   │   └── Orders
+ *   ├── AssetDetail ← pantalla de detalle con streaming en vivo
  *   └── OrderModal  ← presentation: 'modal'
  */
 export function AppNavigator() {
@@ -36,6 +38,11 @@ export function AppNavigator() {
         <RootStack.Screen
           name="MainTabs"
           component={MainTabNavigator}
+          options={{ headerShown: false }}
+        />
+        <RootStack.Screen
+          name="AssetDetail"
+          component={AssetDetailScreen}
           options={{ headerShown: false }}
         />
         <RootStack.Group

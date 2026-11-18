@@ -69,7 +69,7 @@ export function MarketScreen({ navigation }: Props) {
       if (!symbol) {
         return;
       }
-      navigation.navigate('OrderModal', { symbol, side: 'BUY' });
+      navigation.navigate('AssetDetail', { symbol });
     },
     [navigation],
   );

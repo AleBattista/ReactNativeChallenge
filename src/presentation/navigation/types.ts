@@ -18,11 +18,13 @@ export type BottomTabParamList = {
 };
 
 /**
- * Stack raíz: contiene las tabs y todo lo que se presenta POR ENCIMA de ellas
- * (modales). Así el OrderModal tapa la tab bar y puede abrirse desde cualquier solapa.
+ * Stack raíz: contiene las tabs, la pantalla de detalle de activo y los modales.
  */
 export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<BottomTabParamList>;
+  AssetDetail: {
+    readonly symbol: Ticker;
+  };
   OrderModal: {
     readonly symbol: Ticker;
     /** Lado preseleccionado; si se omite, el usuario lo elige en el modal. */
@@ -37,8 +39,8 @@ export type RootStackScreenProps<T extends keyof RootStackParamList> =
 
 /**
  * Pantallas dentro de las tabs: componen la navegación de tabs con la del
- * stack padre, así `navigation.navigate('OrderModal', ...)` tipa correctamente
- * desde cualquier solapa.
+ * stack padre, así `navigation.navigate('AssetDetail', ...)` y
+ * `navigation.navigate('OrderModal', ...)` tipan correctamente desde cualquier solapa.
  */
 export type MainTabScreenProps<T extends keyof BottomTabParamList> =
   CompositeScreenProps<
