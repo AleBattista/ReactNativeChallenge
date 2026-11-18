@@ -83,12 +83,6 @@ export const MarketSearchBar = memo(function MarketSearchBarBase({
         <AppText variant="caption" color="textSecondary" style={styles.tabular}>
           {`${formatQuantity(resultCount)} de ${formatQuantity(totalCount)} activos`}
         </AppText>
-        <View style={[styles.liveIndicator, { gap: spacing.xxs }]}>
-          <View style={[styles.liveDot, { backgroundColor: colors.positive }]} />
-          <AppText variant="caption" color="textSecondary">
-            Streaming en vivo
-          </AppText>
-        </View>
       </View>
     </View>
   );
@@ -117,6 +111,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 10
   },
   liveIndicator: {
     flexDirection: 'row',

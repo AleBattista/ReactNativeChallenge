@@ -138,15 +138,6 @@ export function FavoritesScreen({ navigation }: FavoritesScreenProps) {
             safeFavorites.length === 1 ? 'activo seguido' : 'activos seguidos'
           }`}
         </AppText>
-
-        <View style={[styles.liveIndicator, { gap: spacing.xxs }]}>
-          <View
-            style={[styles.liveDot, { backgroundColor: colors.positive }]}
-          />
-          <AppText variant="caption" color="textSecondary">
-            Streaming en vivo
-          </AppText>
-        </View>
       </View>
 
       <View style={styles.listContainer}>

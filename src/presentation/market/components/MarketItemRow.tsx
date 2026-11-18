@@ -218,7 +218,7 @@ export const MarketItemRow = memo(function MarketItemRowBase({
             </View>
 
             <Animated.View style={[styles.chevronContainer, animatedChevronStyle]}>
-              <AppText variant="caption" color="textMuted" style={{ fontSize: 25 }}>
+              <AppText variant="caption" color="textMuted" style={styles.chevronText}>
                 ▾
               </AppText>
             </Animated.View>
@@ -347,6 +347,9 @@ const styles = StyleSheet.create({
     width: 20,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  chevronText: {
+    fontSize: 25,
   },
   expandedPanel: {
     borderTopWidth: StyleSheet.hairlineWidth,
