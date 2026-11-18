@@ -210,7 +210,7 @@ export const MarketItemRow = memo(function MarketItemRowBase({
 
           <View style={[styles.rightSection, { gap: spacing.md }]}>
             <View style={[styles.priceColumn, { gap: spacing.xxs }]}>
-              <AppText variant="price" style={styles.tabular}>
+              <AppText variant="price" style={[styles.tabular, { textAlign: 'right' }]}>
                 {lastPriceLabel}
               </AppText>
               <ChangeBadge value={quote?.changePercent ?? null} />
@@ -355,16 +355,17 @@ const styles = StyleSheet.create({
   marketTag: {
     paddingVertical: 1,
   },
-  rightSection: {
+rightSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   priceColumn: {
+    width: 130,
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
   chevronContainer: {
-    width: 20,
+    width: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },

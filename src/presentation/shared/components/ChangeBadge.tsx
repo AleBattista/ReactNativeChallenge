@@ -40,7 +40,7 @@ export const ChangeBadge = memo(function ChangeBadgeBase({
           paddingVertical: spacing.xxs,
         },
       ]}>
-      <AppText variant="price" color={tone[trend].fg}>
+      <AppText variant="price" color={tone[trend].fg} style={styles.tabular}>
         {label}
       </AppText>
     </View>
@@ -48,7 +48,13 @@ export const ChangeBadge = memo(function ChangeBadgeBase({
 });
 
 const styles = StyleSheet.create({
-  base: { alignSelf: 'flex-start' },
+  base: {
+    width: 82,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabular: {
+    fontVariant: ['tabular-nums'],
+  },
 });
-
 export default ChangeBadge;
