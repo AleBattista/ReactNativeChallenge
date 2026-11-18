@@ -18,6 +18,8 @@ export interface StoredOrder {
   readonly rejectionReason: string | null;
   readonly createdAt: Timestamp;
   readonly updatedAt: Timestamp;
+  /** Indica si el débito/crédito en PortfolioStore ya fue aplicado atómicamente. */
+  readonly portfolioSettled?: boolean;
 }
 
 export interface PlaceOrderInput {
@@ -25,6 +27,10 @@ export interface PlaceOrderInput {
   readonly type: OrderTradeType;
   readonly quantity: number;
   readonly price: number;
+  /** Monto final con comisiones e IVA incluidos (si ya fue calculado por la boleta). */
+  readonly totalAmount?: number;
+  /** Si es `true`, `PortfolioStore` ya aplicó la transacción al confirmar en el modal. */
+  readonly portfolioAlreadySettled?: boolean;
   /**
    * Demora opcional en ms para la resolución en segundo plano.
    * Si se omite, se usa un valor aleatorio entre 2.000 ms y 3.500 ms.
@@ -111,7 +117,10 @@ export const useOrderStore = create<OrderStoreState>()(
           const normalizedTicker = input.ticker.trim().toUpperCase();
           const quantity = Math.trunc(input.quantity);
           const price = roundCurrency(input.price);
-          const totalAmount = roundCurrency(quantity * price);
+          const totalAmount =
+            input.totalAmount !== undefined && Number.isFinite(input.totalAmount)
+              ? roundCurrency(input.totalAmount)
+              : roundCurrency(quantity * price);
 
           const newOrder: StoredOrder = {
             id: generateOrderId(now),
@@ -124,6 +133,7 @@ export const useOrderStore = create<OrderStoreState>()(
             rejectionReason: null,
             createdAt: now,
             updatedAt: now,
+            portfolioSettled: Boolean(input.portfolioAlreadySettled),
           };
 
           // Insertar al comienzo: historial ordenado de más nueva a más vieja
@@ -149,6 +159,23 @@ export const useOrderStore = create<OrderStoreState>()(
             return;
           }
 
+          const resolvedAt = Date.now();
+          if (target.portfolioSettled) {
+            set(state => ({
+              orders: state.orders.map(order =>
+                order.id === orderId
+                  ? {
+                      ...order,
+                      status: 'EXECUTED',
+                      rejectionReason: null,
+                      updatedAt: resolvedAt,
+                    }
+                  : order,
+              ),
+            }));
+            return;
+          }
+
           const portfolioStore = usePortfolioStore.getState();
           const txResult =
             target.type === 'BUY'
@@ -156,14 +183,15 @@ export const useOrderStore = create<OrderStoreState>()(
                   target.ticker,
                   target.quantity,
                   target.price,
+                  target.totalAmount,
                 )
               : portfolioStore.executeSell(
                   target.ticker,
                   target.quantity,
                   target.price,
+                  target.totalAmount,
                 );
 
-          const resolvedAt = Date.now();
           const nextStatus: StoredOrderStatus = txResult.ok
             ? 'EXECUTED'
             : 'REJECTED';

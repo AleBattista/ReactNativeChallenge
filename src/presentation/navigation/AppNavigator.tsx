@@ -47,10 +47,9 @@ export function AppNavigator() {
         />
         <RootStack.Group
           screenOptions={{
-            presentation: 'modal',
-            headerStyle: { backgroundColor: theme.colors.surface },
-            headerTintColor: theme.colors.textPrimary,
-            headerShadowVisible: false,
+            presentation: 'transparentModal',
+            animation: 'fade',
+            headerShown: false,
           }}>
           <RootStack.Screen
             name="OrderModal"

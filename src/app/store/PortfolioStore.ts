@@ -55,6 +55,7 @@ export interface PortfolioStoreState extends PortfolioPersistedState {
     ticker: Ticker,
     quantity: number,
     unitPrice: number,
+    totalWithFees?: number,
   ) => PortfolioTransactionResult;
   /**
    * Ejecuta una venta de forma transaccional y atómica:
@@ -65,6 +66,7 @@ export interface PortfolioStoreState extends PortfolioPersistedState {
     ticker: Ticker,
     quantity: number,
     unitPrice: number,
+    netTotalAfterFees?: number,
   ) => PortfolioTransactionResult;
   /** Restaura la cuenta al estado inicial ($1,000,000 ARS y sin tenencias). */
   readonly resetPortfolio: () => void;
@@ -100,7 +102,12 @@ export const usePortfolioStore = create<PortfolioStoreState>()(
         return holding !== undefined && holding.quantity >= quantity;
       },
 
-      executeBuy: (ticker: Ticker, quantity: number, unitPrice: number) => {
+      executeBuy: (
+        ticker: Ticker,
+        quantity: number,
+        unitPrice: number,
+        totalWithFees?: number,
+      ) => {
         const normalizedTicker = ticker.trim().toUpperCase();
         if (
           !normalizedTicker ||
@@ -116,7 +123,11 @@ export const usePortfolioStore = create<PortfolioStoreState>()(
           };
         }
 
-        const totalAmount = roundCurrency(quantity * unitPrice);
+        const grossAmount = roundCurrency(quantity * unitPrice);
+        const totalAmount =
+          totalWithFees !== undefined && Number.isFinite(totalWithFees) && totalWithFees > 0
+            ? roundCurrency(totalWithFees)
+            : grossAmount;
         let outcome: PortfolioTransactionResult = {
           ok: false,
           code: 'INSUFFICIENT_FUNDS',
@@ -146,7 +157,7 @@ export const usePortfolioStore = create<PortfolioStoreState>()(
             const current = state.holdings[existingIndex]!;
             const nextQuantity = current.quantity + quantity;
             const totalCost =
-              current.quantity * current.averagePrice + totalAmount;
+              current.quantity * current.averagePrice + grossAmount;
             updatedHolding = {
               ticker: normalizedTicker,
               quantity: nextQuantity,
@@ -180,7 +191,12 @@ export const usePortfolioStore = create<PortfolioStoreState>()(
         return outcome;
       },
 
-      executeSell: (ticker: Ticker, quantity: number, unitPrice: number) => {
+      executeSell: (
+        ticker: Ticker,
+        quantity: number,
+        unitPrice: number,
+        netTotalAfterFees?: number,
+      ) => {
         const normalizedTicker = ticker.trim().toUpperCase();
         if (
           !normalizedTicker ||
@@ -196,7 +212,13 @@ export const usePortfolioStore = create<PortfolioStoreState>()(
           };
         }
 
-        const totalAmount = roundCurrency(quantity * unitPrice);
+        const grossAmount = roundCurrency(quantity * unitPrice);
+        const totalAmount =
+          netTotalAfterFees !== undefined &&
+          Number.isFinite(netTotalAfterFees) &&
+          netTotalAfterFees >= 0
+            ? roundCurrency(netTotalAfterFees)
+            : grossAmount;
         let outcome: PortfolioTransactionResult = {
           ok: false,
           code: 'INSUFFICIENT_POSITION',
