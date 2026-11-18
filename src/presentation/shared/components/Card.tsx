@@ -1,15 +1,17 @@
 import React, { memo } from 'react';
 import { StyleSheet, View, type ViewProps } from 'react-native';
 import { useTheme } from '../../../core/theme/ThemeProvider';
-import type { Spacing } from '../../../core/theme/tokens';
+import type { Radius, Spacing } from '../../../core/theme/tokens';
 
 export interface CardProps extends ViewProps {
   readonly padding?: Spacing;
+  readonly radius?: Radius;
   readonly elevated?: boolean;
 }
 
 export const Card = memo(function CardBase({
   padding = 'lg',
+  radius = 'lg',
   elevated = false,
   style,
   ...rest
@@ -23,7 +25,7 @@ export const Card = memo(function CardBase({
         {
           backgroundColor: elevated ? colors.surfaceElevated : colors.surface,
           borderColor: colors.border,
-          borderRadius: radii.md,
+          borderRadius: radii[radius],
           padding: spacing[padding],
         },
         style,

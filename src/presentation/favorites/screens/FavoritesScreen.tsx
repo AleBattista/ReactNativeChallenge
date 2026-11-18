@@ -27,7 +27,7 @@ export type FavoritesScreenProps = MainTabScreenProps<'Favorites'>;
  *  - Muestra un Empty State informativo con CTA hacia Mercado cuando no hay favoritos.
  */
 export function FavoritesScreen({ navigation }: FavoritesScreenProps) {
-  const { colors, spacing } = useTheme();
+  const { colors, spacing, radii } = useTheme();
 
   const favorites = useFavoritesStore(state => state.favorites);
   const toggleFavorite = useFavoritesStore(state => state.toggleFavorite);
@@ -92,6 +92,8 @@ export function FavoritesScreen({ navigation }: FavoritesScreenProps) {
               styles.starBadge,
               {
                 backgroundColor: colors.neutralSoft,
+                borderColor: colors.border,
+                borderRadius: radii.pill,
               },
             ]}>
             <AppText variant="display" color="accent">
@@ -103,7 +105,10 @@ export function FavoritesScreen({ navigation }: FavoritesScreenProps) {
             Aún no tienes activos favoritos
           </AppText>
 
-          <AppText color="textSecondary" style={styles.centeredText}>
+          <AppText
+            variant="body"
+            color="textSecondary"
+            style={styles.centeredText}>
             Marca tus instrumentos preferidos con la estrella (★) desde el
             listado de Mercado o en la pantalla de detalle de cada activo para
             seguir su cotización en tiempo real desde aquí.
@@ -187,9 +192,9 @@ const styles = StyleSheet.create({
   starBadge: {
     width: 64,
     height: 64,
-    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
   },
   centeredText: {
     textAlign: 'center',

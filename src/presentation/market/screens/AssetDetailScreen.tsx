@@ -213,7 +213,7 @@ export function AssetDetailScreen({ route, navigation }: AssetDetailScreenProps)
               borderRadius: radii.md,
               paddingHorizontal: spacing.md,
               paddingVertical: spacing.xs,
-              opacity: pressed ? 0.75 : 1,
+              opacity: pressed ? 0.82 : 1,
             },
           ]}>
           <AppText variant="bodyStrong">← Volver</AppText>
@@ -244,7 +244,7 @@ export function AssetDetailScreen({ route, navigation }: AssetDetailScreenProps)
               borderRadius: radii.md,
               paddingHorizontal: spacing.md,
               paddingVertical: spacing.xs,
-              opacity: pressed ? 0.75 : 1,
+              opacity: pressed ? 0.82 : 1,
             },
           ]}>
           <AppText
@@ -570,7 +570,7 @@ export function AssetDetailScreen({ route, navigation }: AssetDetailScreenProps)
               backgroundColor: colors.buy,
               borderRadius: radii.md,
               paddingVertical: spacing.md,
-              opacity: pressed ? 0.85 : 1,
+              opacity: pressed ? 0.82 : 1,
             },
           ]}>
           <AppText variant="bodyStrong" color="onAccent">
@@ -588,7 +588,7 @@ export function AssetDetailScreen({ route, navigation }: AssetDetailScreenProps)
               backgroundColor: colors.sell,
               borderRadius: radii.md,
               paddingVertical: spacing.md,
-              opacity: pressed ? 0.85 : 1,
+              opacity: pressed ? 0.82 : 1,
             },
           ]}>
           <AppText variant="bodyStrong" color="onAccent">

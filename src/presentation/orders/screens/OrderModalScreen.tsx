@@ -374,7 +374,7 @@ export function OrderModalScreen({ route, navigation }: OrderModalScreenProps) {
                   backgroundColor: colors.background,
                   borderColor: colors.border,
                   borderRadius: radii.pill,
-                  opacity: pressed ? 0.7 : 1,
+                  opacity: pressed ? 0.82 : 1,
                 },
               ]}>
               <AppText variant="bodyStrong" color="textSecondary">
@@ -543,7 +543,7 @@ export function OrderModalScreen({ route, navigation }: OrderModalScreenProps) {
                         : colors.neutralSoft,
                       borderRadius: radii.md,
                       paddingVertical: spacing.md,
-                      opacity: pressed && validation.isValid ? 0.85 : 1,
+                      opacity: pressed && validation.isValid ? 0.82 : 1,
                     },
                   ]}>
                   <AppText
@@ -662,7 +662,7 @@ export function OrderModalScreen({ route, navigation }: OrderModalScreenProps) {
                         borderColor: colors.border,
                         borderRadius: radii.md,
                         paddingVertical: spacing.md,
-                        opacity: pressed && !isSubmitting ? 0.8 : 1,
+                        opacity: pressed && !isSubmitting ? 0.82 : 1,
                       },
                     ]}>
                     <AppText variant="bodyStrong">← Editar</AppText>
@@ -688,7 +688,7 @@ export function OrderModalScreen({ route, navigation }: OrderModalScreenProps) {
                         paddingVertical: spacing.md,
                         opacity:
                           pressed && !isSubmitting && validation.isValid
-                            ? 0.85
+                            ? 0.82
                             : 1,
                       },
                     ]}>

@@ -1,28 +1,4 @@
-/**
- * Tokens primitivos. NO se usan directo en componentes: los componentes
- * consumen colores SEMÁNTICOS del tema (themes.ts), así Dark/Light es un swap.
- */
-
-export const palette = {
-  white: '#FFFFFF',
-  black: '#000000',
-  gray50: '#F7F8FA',
-  gray100: '#EEF0F4',
-  gray200: '#DDE1E8',
-  gray400: '#9AA3B2',
-  gray500: '#6B7385',
-  gray700: '#2A2F3A',
-  gray800: '#1C2029',
-  gray900: '#12151C',
-  gray950: '#0A0C10',
-  green400: '#2FD18A',
-  green600: '#0F9D58',
-  red400: '#FF6B6B',
-  red600: '#D93025',
-  blue400: '#5B9BFF',
-  blue600: '#1A6BE0',
-  amber500: '#F5A524',
-} as const;
+export { darkColors, lightColors, palette, type ThemeColors } from './colors';
 
 export const spacing = {
   none: 0,
@@ -52,8 +28,18 @@ export const typography = {
   body: { fontSize: 15, lineHeight: 20, fontWeight: '400' },
   bodyStrong: { fontSize: 15, lineHeight: 20, fontWeight: '600' },
   caption: { fontSize: 12, lineHeight: 16, fontWeight: '400' },
-  price: { fontSize: 16, lineHeight: 20, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  priceLarge: { fontSize: 32, lineHeight: 38, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  price: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
+  },
+  priceLarge: {
+    fontSize: 32,
+    lineHeight: 38,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+  },
 } as const;
 
 export type Spacing = keyof typeof spacing;

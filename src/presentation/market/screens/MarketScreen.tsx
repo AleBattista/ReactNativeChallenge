@@ -35,7 +35,7 @@ type Props = MainTabScreenProps<'Market'>;
  *    filtrados conservando la preferencia al navegar hacia `AssetDetail` y volver.
  */
 export function MarketScreen({ navigation }: Props) {
-  const { colors, spacing } = useTheme();
+  const { colors, spacing, radii } = useTheme();
   const {
     status,
     errorMessage,
@@ -221,12 +221,44 @@ export function MarketScreen({ navigation }: Props) {
             <View
               style={[
                 styles.emptyState,
-                { padding: spacing.xl, gap: spacing.sm },
+                { padding: spacing.xl },
               ]}>
-              <AppText variant="bodyStrong">Sin resultados</AppText>
-              <AppText variant="caption" color="textSecondary">
-                {`No se encontraron activos que coincidan con "${safeSearchQuery.trim()}".`}
-              </AppText>
+              <Card style={[styles.emptyCard, { gap: spacing.md }]}>
+                <View
+                  style={[
+                    styles.emptyIconCircle,
+                    {
+                      backgroundColor: colors.neutralSoft,
+                      borderColor: colors.border,
+                      borderRadius: radii.pill,
+                    },
+                  ]}>
+                  <AppText variant="title" color="accent">
+                    ⌕
+                  </AppText>
+                </View>
+
+                <AppText variant="title" style={styles.centeredText}>
+                  Sin resultados para tu búsqueda
+                </AppText>
+
+                <AppText
+                  variant="body"
+                  color="textSecondary"
+                  style={styles.centeredText}>
+                  {`No encontramos ningún activo que coincida con "${safeSearchQuery.trim()}". Prueba con otro ticker o limpia el filtro.`}
+                </AppText>
+
+                {safeSearchQuery.length > 0 ? (
+                  <View style={styles.emptyActionWrapper}>
+                    <AppButton
+                      label="Limpiar búsqueda"
+                      variant="secondary"
+                      onPress={clearSearch}
+                    />
+                  </View>
+                ) : null}
+              </Card>
             </View>
           }
         />
@@ -263,6 +295,24 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  emptyCard: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  centeredText: {
+    textAlign: 'center',
+  },
+  emptyActionWrapper: {
+    width: '100%',
+    marginTop: 4,
   },
 });
 

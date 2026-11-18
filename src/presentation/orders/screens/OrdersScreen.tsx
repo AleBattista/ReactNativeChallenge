@@ -257,7 +257,11 @@ export function OrdersScreen({ navigation }: OrdersScreenProps) {
                 <View
                   style={[
                     styles.iconBadge,
-                    { backgroundColor: colors.neutralSoft },
+                    {
+                      backgroundColor: colors.neutralSoft,
+                      borderColor: colors.border,
+                      borderRadius: radii.pill,
+                    },
                   ]}>
                   <AppText variant="title" color="accent">
                     💼
@@ -268,7 +272,10 @@ export function OrdersScreen({ navigation }: OrdersScreenProps) {
                   Tu portfolio está vacío
                 </AppText>
 
-                <AppText color="textSecondary" style={styles.centeredText}>
+                <AppText
+                  variant="body"
+                  color="textSecondary"
+                  style={styles.centeredText}>
                   Aún no posees tenencias en cartera. Explora el listado de
                   Mercado, selecciona un activo y presiona &ldquo;Comprar&rdquo;
                   para invertir tu saldo disponible.
@@ -302,7 +309,11 @@ export function OrdersScreen({ navigation }: OrdersScreenProps) {
               <View
                 style={[
                   styles.iconBadge,
-                  { backgroundColor: colors.neutralSoft },
+                  {
+                    backgroundColor: colors.neutralSoft,
+                    borderColor: colors.border,
+                    borderRadius: radii.pill,
+                  },
                 ]}>
                 <AppText variant="title" color="accent">
                   ≡
@@ -313,7 +324,10 @@ export function OrdersScreen({ navigation }: OrdersScreenProps) {
                 Sin órdenes registradas
               </AppText>
 
-              <AppText color="textSecondary" style={styles.centeredText}>
+              <AppText
+                variant="body"
+                color="textSecondary"
+                style={styles.centeredText}>
                 Todas las órdenes de compra y venta que envíes desde el
                 simulador aparecerán aquí ordenadas de más reciente a más
                 antigua con su estado de ejecución.
@@ -385,11 +399,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
   },
   centeredText: {
     textAlign: 'center',

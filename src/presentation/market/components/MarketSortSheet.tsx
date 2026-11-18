@@ -208,7 +208,7 @@ export const MarketSortSheet = memo(function MarketSortSheetBase({
                   backgroundColor: colors.background,
                   borderColor: colors.border,
                   borderRadius: radii.pill,
-                  opacity: pressed ? 0.7 : 1,
+                  opacity: pressed ? 0.82 : 1,
                 },
               ]}>
               <AppText variant="bodyStrong" color="textSecondary">
@@ -267,7 +267,7 @@ export const MarketSortSheet = memo(function MarketSortSheetBase({
                           borderRadius: radii.sm,
                           paddingVertical: spacing.sm,
                           paddingHorizontal: spacing.md,
-                          opacity: pressed ? 0.8 : 1,
+                          opacity: pressed ? 0.82 : 1,
                         },
                       ]}>
                       <AppText
@@ -294,7 +294,7 @@ export const MarketSortSheet = memo(function MarketSortSheetBase({
                           borderRadius: radii.sm,
                           paddingVertical: spacing.sm,
                           paddingHorizontal: spacing.md,
-                          opacity: pressed ? 0.8 : 1,
+                          opacity: pressed ? 0.82 : 1,
                         },
                       ]}>
                       <AppText
@@ -323,7 +323,7 @@ export const MarketSortSheet = memo(function MarketSortSheetBase({
                   borderColor: colors.border,
                   borderRadius: radii.md,
                   paddingVertical: spacing.md,
-                  opacity: currentSort === null ? 0.45 : pressed ? 0.8 : 1,
+                  opacity: currentSort === null ? 0.45 : pressed ? 0.82 : 1,
                 },
               ]}>
               <AppText
@@ -344,7 +344,7 @@ export const MarketSortSheet = memo(function MarketSortSheetBase({
                   borderColor: colors.accent,
                   borderRadius: radii.md,
                   paddingVertical: spacing.md,
-                  opacity: pressed ? 0.85 : 1,
+                  opacity: pressed ? 0.82 : 1,
                 },
               ]}>
               <AppText variant="bodyStrong" color="onAccent">

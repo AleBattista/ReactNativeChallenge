@@ -187,7 +187,7 @@ export const HoldingItemRow = memo(function HoldingItemRowBase({
               borderRadius: radii.sm,
               paddingHorizontal: spacing.md,
               paddingVertical: spacing.xs,
-              opacity: pressed ? 0.75 : 1,
+              opacity: pressed ? 0.82 : 1,
             },
           ]}>
           <AppText variant="caption" color="negative">

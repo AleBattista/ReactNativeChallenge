@@ -174,7 +174,7 @@ export const FavoriteItemRow = memo(function FavoriteItemRowBase({
                 backgroundColor: colors.positiveSoft,
                 borderColor: colors.positive,
                 borderRadius: radii.md,
-                opacity: pressed ? 0.7 : 1,
+                opacity: pressed ? 0.82 : 1,
               },
             ]}>
             <AppText variant="bodyStrong" color="positive">

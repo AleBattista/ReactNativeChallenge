@@ -32,7 +32,7 @@ export const AppButton = memo(function AppButtonBase({
           borderRadius: radii.md,
           paddingVertical: spacing.md,
           paddingHorizontal: spacing.lg,
-          opacity: pressed ? 0.8 : 1,
+          opacity: pressed ? 0.82 : 1,
         },
       ]}>
       <AppText

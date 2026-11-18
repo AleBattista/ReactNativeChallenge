@@ -111,7 +111,7 @@ export const MarketSearchBar = memo(function MarketSearchBarBase({
                 borderRadius: radii.sm,
                 paddingHorizontal: spacing.sm,
                 paddingVertical: spacing.xxs,
-                opacity: pressed ? 0.8 : 1,
+                opacity: pressed ? 0.82 : 1,
               },
             ]}>
             <AppText
