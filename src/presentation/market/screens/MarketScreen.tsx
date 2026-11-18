@@ -1,5 +1,5 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useTheme } from '../../../core/theme/ThemeProvider';
 import type { Ticker } from '../../../domain/shared';
@@ -13,12 +13,15 @@ import {
 } from '../components/MarketItemRow';
 import { MarketSearchBar } from '../components/MarketSearchBar';
 import { MarketSortSheet } from '../components/MarketSortSheet';
+import { ThemeToggleSwitch } from '../components/ThemeToggleSwitch';
 import { useMarketCatalog } from '../hooks/useMarketCatalog';
 
 /**
  * Constante local de respaldo en caso de re-evaluación circular de módulos en Metro.
  */
 const ESTIMATED_ROW_HEIGHT = MARKET_ITEM_ROW_HEIGHT ?? 76;
+
+const renderHeaderRight = () => <ThemeToggleSwitch />;
 
 type Props = MainTabScreenProps<'Market'>;
 
@@ -53,6 +56,12 @@ export function MarketScreen({ navigation }: Props) {
     () => new Set<Ticker>(),
   );
   const [isSortSheetVisible, setIsSortSheetVisible] = useState(false);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: renderHeaderRight,
+    });
+  }, [navigation]);
 
   const handleOpenSortSheet = useCallback(() => {
     setIsSortSheetVisible(true);

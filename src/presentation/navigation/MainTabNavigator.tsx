@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
 import { useTheme } from '../../core/theme/ThemeProvider';
 import { FavoritesScreen } from '../favorites/screens/FavoritesScreen';
+import { ThemeToggleSwitch } from '../market/components/ThemeToggleSwitch';
 import { MarketScreen } from '../market/screens/MarketScreen';
 import { OrdersScreen } from '../orders/screens/OrdersScreen';
 import { TabIcon } from './TabIcon';
@@ -25,6 +26,7 @@ const renderFavoritesIcon = (props: TabIconRenderProps) => (
 const renderOrdersIcon = (props: TabIconRenderProps) => (
   <TabIcon glyph="≡" {...props} />
 );
+const renderMarketHeaderRight = () => <ThemeToggleSwitch />;
 
 /**
  * Navegador de solapas inferiores (Mercado, Favoritos, Órdenes).
@@ -50,7 +52,11 @@ export function MainTabNavigator() {
       <Tab.Screen
         name="Market"
         component={MarketScreen}
-        options={{ title: 'Mercado', tabBarIcon: renderMarketIcon }}
+        options={{
+          title: 'Mercado',
+          tabBarIcon: renderMarketIcon,
+          headerRight: renderMarketHeaderRight,
+        }}
       />
       <Tab.Screen
         name="Favorites"

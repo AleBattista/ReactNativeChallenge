@@ -16,3 +16,4 @@ export {
   type MarketSortField,
   type MarketSortSheetProps,
 } from './MarketSortSheet';
+export { ThemeToggleSwitch } from './ThemeToggleSwitch';

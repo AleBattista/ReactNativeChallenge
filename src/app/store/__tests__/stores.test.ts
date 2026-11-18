@@ -1,9 +1,11 @@
 import {
+  DEFAULT_THEME_MODE,
   INITIAL_CASH_BALANCE,
   useFavoritesStore,
   useOrderStore,
   usePortfolioStore,
   useSettingsStore,
+  useThemeStore,
 } from '../index';
 
 describe('Zustand Persisted Stores (src/app/store)', () => {
@@ -13,6 +15,7 @@ describe('Zustand Persisted Stores (src/app/store)', () => {
     usePortfolioStore.getState().resetPortfolio();
     useFavoritesStore.getState().clearFavorites();
     useSettingsStore.getState().resetSettings();
+    useThemeStore.getState().resetTheme();
   });
 
   afterEach(() => {
@@ -155,6 +158,22 @@ describe('Zustand Persisted Stores (src/app/store)', () => {
 
       useSettingsStore.getState().setThemePreference('light');
       expect(useSettingsStore.getState().themePreference).toBe('light');
+    });
+  });
+
+  describe('ThemeStore', () => {
+    it('inicia en modo dark por defecto y alterna entre dark y light con toggleTheme y setTheme', () => {
+      expect(useThemeStore.getState().mode).toBe(DEFAULT_THEME_MODE);
+      expect(useThemeStore.getState().mode).toBe('dark');
+
+      useThemeStore.getState().toggleTheme();
+      expect(useThemeStore.getState().mode).toBe('light');
+
+      useThemeStore.getState().toggleTheme();
+      expect(useThemeStore.getState().mode).toBe('dark');
+
+      useThemeStore.getState().setTheme('light');
+      expect(useThemeStore.getState().mode).toBe('light');
     });
   });
 });

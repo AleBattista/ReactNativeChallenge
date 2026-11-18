@@ -25,3 +25,10 @@ export {
   type ThemePreference,
 } from './SettingsStore';
 export { createPersistedStorage } from './storage';
+export {
+  DEFAULT_THEME_MODE,
+  ThemeStore,
+  useThemeStore,
+  type ThemeMode,
+  type ThemeStoreState,
+} from './ThemeStore';
