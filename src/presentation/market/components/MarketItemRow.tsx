@@ -11,6 +11,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { useFavoritesStore } from '../../../app/store/FavoritesStore';
 import { useTheme } from '../../../core/theme/ThemeProvider';
 import {
   formatCompact,
@@ -57,6 +58,11 @@ export const MarketItemRow = memo(function MarketItemRowBase({
   const { colors, spacing, radii } = useTheme();
   const info = useAssetInfo(ticker);
   const quote = useLiveQuote(ticker);
+
+  const isFavorite = useFavoritesStore(
+    useCallback(state => state.favorites.includes(ticker), [ticker]),
+  );
+  const toggleFavorite = useFavoritesStore(state => state.toggleFavorite);
 
   const lastPrice = quote?.lastPrice ?? null;
   const prevPriceRef = useRef<number | null>(lastPrice);
@@ -119,6 +125,10 @@ export const MarketItemRow = memo(function MarketItemRowBase({
     onPressDetail(ticker);
   }, [onPressDetail, ticker]);
 
+  const handleToggleFavorite = useCallback(() => {
+    toggleFavorite(ticker);
+  }, [toggleFavorite, ticker]);
+
   const currency = info?.currency ?? 'ARS';
   const description = info?.description ?? ticker;
   const market = info?.market ?? 'BCBA';
@@ -160,6 +170,22 @@ export const MarketItemRow = memo(function MarketItemRowBase({
           ]}>
           <View style={styles.leftColumn}>
             <View style={[styles.symbolRow, { gap: spacing.xs }]}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: isFavorite }}
+                accessibilityLabel={
+                  isFavorite
+                    ? `Quitar ${ticker} de favoritos`
+                    : `Agregar ${ticker} a favoritos`
+                }
+                hitSlop={8}
+                onPress={handleToggleFavorite}>
+                <AppText
+                  variant="bodyStrong"
+                  color={isFavorite ? 'positive' : 'textMuted'}>
+                  {isFavorite ? '★' : '☆'}
+                </AppText>
+              </Pressable>
               <AppText variant="bodyStrong" numberOfLines={1}>
                 {ticker}
               </AppText>
@@ -192,7 +218,7 @@ export const MarketItemRow = memo(function MarketItemRowBase({
             </View>
 
             <Animated.View style={[styles.chevronContainer, animatedChevronStyle]}>
-              <AppText variant="caption" color="textMuted">
+              <AppText variant="caption" color="textMuted" style={{ fontSize: 25 }}>
                 ▾
               </AppText>
             </Animated.View>
