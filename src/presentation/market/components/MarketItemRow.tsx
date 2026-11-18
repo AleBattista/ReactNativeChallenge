@@ -1,11 +1,11 @@
 import React, { memo, useCallback, useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   Easing,
   FadeInDown,
   FadeOutUp,
   interpolateColor,
-  LinearTransition,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -64,6 +64,7 @@ export const MarketItemRow = memo(function MarketItemRowBase({
   const toggleFavorite = useFavoritesStore(state => state.toggleFavorite);
 
   const lastPrice = quote?.lastPrice ?? null;
+  const prevTickerRef = useRef<Ticker>(ticker);
   const prevPriceRef = useRef<number | null>(lastPrice);
 
   // Shared values en el UI Thread para el flash de precio y rotación del indicador
@@ -71,8 +72,22 @@ export const MarketItemRow = memo(function MarketItemRowBase({
   const flashDirection = useSharedValue<1 | -1>(1);
   const expandProgress = useSharedValue(isExpanded ? 1 : 0);
 
-  // Dispara el flash en el hilo nativo de UI cuando fluctúa el último precio
+  // Resetea explícitamente el parpadeo cuando FlashList recicla la celda para otro ticker
   useEffect(() => {
+    cancelAnimation(flashProgress);
+    flashProgress.value = 0;
+  }, [ticker, flashProgress]);
+
+  // Dispara el flash en el hilo nativo de UI solo cuando fluctúa el precio del MISMO ticker
+  useEffect(() => {
+    if (prevTickerRef.current !== ticker) {
+      prevTickerRef.current = ticker;
+      prevPriceRef.current = lastPrice;
+      cancelAnimation(flashProgress);
+      flashProgress.value = 0;
+      return;
+    }
+
     const previous = prevPriceRef.current;
     if (previous !== null && lastPrice !== null && lastPrice !== previous) {
       flashDirection.value = lastPrice > previous ? 1 : -1;
@@ -82,7 +97,7 @@ export const MarketItemRow = memo(function MarketItemRowBase({
       );
     }
     prevPriceRef.current = lastPrice;
-  }, [lastPrice, flashDirection, flashProgress]);
+  }, [ticker, lastPrice, flashDirection, flashProgress]);
 
   useEffect(() => {
     expandProgress.value = withTiming(isExpanded ? 1 : 0, {
@@ -145,7 +160,6 @@ export const MarketItemRow = memo(function MarketItemRowBase({
 
   return (
     <Animated.View
-      layout={LinearTransition?.duration?.(180)}
       style={[
         styles.wrapper,
         {
@@ -210,7 +224,7 @@ export const MarketItemRow = memo(function MarketItemRowBase({
 
           <View style={[styles.rightSection, { gap: spacing.md }]}>
             <View style={[styles.priceColumn, { gap: spacing.xxs }]}>
-              <AppText variant="price" style={[styles.tabular, { textAlign: 'right' }]}>
+              <AppText variant="price" style={[styles.tabular, styles.priceText]}>
                 {lastPriceLabel}
               </AppText>
               <ChangeBadge value={quote?.changePercent ?? null} />
@@ -363,6 +377,9 @@ rightSection: {
     width: 130,
     alignItems: 'flex-end',
     justifyContent: 'center',
+  },
+  priceText: {
+    textAlign: 'right',
   },
   chevronContainer: {
     width: 28,
