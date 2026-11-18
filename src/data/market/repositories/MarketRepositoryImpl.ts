@@ -67,6 +67,25 @@ export class MarketRepositoryImpl implements MarketRepository {
     if (!this.live) {
       return noop;
     }
-    return this.live.connect(patches => this.store.applyPatches(patches));
+    const disconnectSource = this.live.connect(patches =>
+      this.store.applyPatches(patches),
+    );
+    const unregisterLifecycle = this.store.registerLifecycleHandlers({
+      onPause: () => this.live?.pause(),
+      onResume: () => this.live?.resume(),
+    });
+
+    return () => {
+      unregisterLifecycle();
+      disconnectSource();
+    };
+  }
+
+  pauseLiveQuotes(): void {
+    this.store.pause();
+  }
+
+  resumeLiveQuotes(): void {
+    this.store.resume();
   }
 }

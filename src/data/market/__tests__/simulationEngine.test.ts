@@ -157,4 +157,57 @@ describe('MockLiveQuoteSource y Reglas Financieras', () => {
       calculateChangePercent(agroAfterTwoTicks.lastPrice!, expectedRefPrice),
     );
   });
+
+  it('pausa el streaming en background y ejecuta Sync-on-Resume inmediato sobre los símbolos visibles al volver a active', () => {
+    jest.useFakeTimers();
+    try {
+      const store = new MarketMemoryStore(flush => flush());
+      const mapped = mapAssetPricesResponse(
+        buildSyntheticAssetPricesResponse(undefined, 10),
+        1_700_000_000_000,
+      )!;
+      store.hydrate(mapped.assets.map(a => a.quote));
+
+      const live = new MockLiveQuoteSource(store, {
+        intervalMs: 2500,
+        batchSize: 3,
+        maxDeltaPercent: 0.5,
+        random: () => 0.95,
+        now: () => 10_000,
+      });
+
+      const okSource = new MockMarketDataSource({
+        minLatencyMs: 1,
+        maxLatencyMs: 2,
+        failureRate: 0,
+      });
+      const repo = new MarketRepositoryImpl(okSource, store, live);
+      const disconnect = repo.connectLiveQuotes();
+
+      // Simulamos que ALUA está visible en el viewport (tiene suscriptor activo)
+      const aluaListener = jest.fn();
+      const unsubscribeAlua = store.subscribe('ALUA', aluaListener);
+      expect(store.getActiveSymbols()).toEqual(['ALUA']);
+
+      // La app pasa a background -> se pausa el store y el timer de streaming
+      store.pause();
+      expect(store.isPaused()).toBe(true);
+      expect(live.isPaused()).toBe(true);
+
+      // Avanzamos 10 segundos en background: no debe dispararse ningún tick
+      jest.advanceTimersByTime(10_000);
+      expect(aluaListener).not.toHaveBeenCalled();
+
+      // La app vuelve a active -> Sync-on-Resume actualiza instantáneamente ALUA sin esperar 2.5s
+      store.resume();
+      expect(store.isPaused()).toBe(false);
+      expect(live.isPaused()).toBe(false);
+      expect(aluaListener).toHaveBeenCalledTimes(1);
+
+      unsubscribeAlua();
+      disconnect();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });

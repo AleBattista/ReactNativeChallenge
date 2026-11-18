@@ -333,9 +333,7 @@ export const MarketItemRow = memo(function MarketItemRowBase({
               <AppText variant="bodyStrong" color="accent">
                 Ver detalle
               </AppText>
-              <AppText variant="bodyStrong" color="accent">
-                →
-              </AppText>
+           
             </Pressable>
           </View>
         </Animated.View>

@@ -4,6 +4,7 @@ import { createDependencies } from './src/app/di/container';
 import { DependenciesProvider } from './src/app/di/DependenciesProvider';
 import { ThemeProvider } from './src/core/theme/ThemeProvider';
 import { AppNavigator } from './src/presentation/navigation/AppNavigator';
+import { LogBox } from 'react-native';
 
 /**
  * Orden de los providers en la raíz:
@@ -14,6 +15,7 @@ import { AppNavigator } from './src/presentation/navigation/AppNavigator';
  */
 export function App() {
   const dependencies = useMemo(() => createDependencies(), []);
+  LogBox.ignoreAllLogs(true);
 
   return (
     <SafeAreaProvider>

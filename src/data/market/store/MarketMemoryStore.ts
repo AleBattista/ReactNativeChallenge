@@ -8,6 +8,11 @@ export type QuotePatch = { readonly symbol: Ticker } & Partial<
 
 export type Scheduler = (flush: () => void) => void;
 
+export interface StoreLifecycleHandlers {
+  readonly onPause?: () => void;
+  readonly onResume?: () => void;
+}
+
 /** Por defecto agrupa todos los ticks de un mismo turno del event loop. */
 const microtaskScheduler: Scheduler = flush => {
   Promise.resolve().then(flush);
@@ -53,9 +58,9 @@ const sameSymbols = (a: readonly Ticker[], b: readonly Ticker[]): boolean =>
  *     solo despierta a los componentes suscritos a ALUA. Nada de re-render global.
  *  3. Dedupe: un parche que no cambia valores no genera notificación.
  *  4. Batching: N ticks en el mismo turno => 1 notificación por símbolo.
- *  5. Singleton por módulo (`marketMemoryStore`), pero la clase se exporta para
- *     crear instancias aisladas en tests. Los consumidores lo reciben vía DI
- *     tipado como `QuoteFeed` (puerto de dominio), nunca importando el singleton.
+ *  5. Ciclo de vida (pause / resume + Sync-on-Resume): pausa notificaciones y
+ *     streaming cuando la app pasa a background, y al reanudar fuerza un
+ *     snapshot inmediato sobre los símbolos activos en el viewport.
  */
 export class MarketMemoryStore implements QuoteFeed {
   private quotes = new Map<Ticker, Quote>();
@@ -63,9 +68,11 @@ export class MarketMemoryStore implements QuoteFeed {
   private symbols: readonly Ticker[] = [];
   private readonly listenersBySymbol = new Map<Ticker, Set<Listener>>();
   private readonly symbolsListeners = new Set<Listener>();
+  private readonly lifecycleHandlers = new Set<StoreLifecycleHandlers>();
   private readonly pending = new Set<Ticker>();
   private symbolsDirty = false;
   private flushScheduled = false;
+  private paused = false;
 
   constructor(private readonly schedule: Scheduler = microtaskScheduler) {}
 
@@ -77,6 +84,15 @@ export class MarketMemoryStore implements QuoteFeed {
     this.assetInfoBySymbol.get(symbol);
 
   getSymbols = (): readonly Ticker[] => this.symbols;
+
+  /**
+   * Devuelve únicamente los símbolos que tienen al menos un componente montado
+   * suscrito actualmente (celdas visibles en el viewport de FlashList, pantalla
+   * de detalle o modal de orden).
+   */
+  getActiveSymbols = (): readonly Ticker[] => [
+    ...this.listenersBySymbol.keys(),
+  ];
 
   subscribe = (symbol: Ticker, listener: Listener): Unsubscribe => {
     let set = this.listenersBySymbol.get(symbol);
@@ -103,6 +119,42 @@ export class MarketMemoryStore implements QuoteFeed {
       this.symbolsListeners.delete(listener);
     };
   };
+
+  // ---- Ciclo de vida (AppState background / active) ------------------------
+
+  isPaused = (): boolean => this.paused;
+
+  pause = (): void => {
+    if (this.paused) {
+      return;
+    }
+    this.paused = true;
+    for (const handler of this.lifecycleHandlers) {
+      handler.onPause?.();
+    }
+  };
+
+  resume = (): void => {
+    if (!this.paused) {
+      return;
+    }
+    this.paused = false;
+    for (const handler of this.lifecycleHandlers) {
+      handler.onResume?.();
+    }
+    this.requestFlush();
+  };
+
+  /**
+   * Permite al repositorio o fuente de streaming engancharse a `.pause()` y
+   * `.resume()` sin acoplar la capa de presentación.
+   */
+  registerLifecycleHandlers(handlers: StoreLifecycleHandlers): Unsubscribe {
+    this.lifecycleHandlers.add(handlers);
+    return () => {
+      this.lifecycleHandlers.delete(handlers);
+    };
+  }
 
   // ---- Escritura (solo la usan repositorios / LiveQuoteSource).
 
@@ -148,7 +200,11 @@ export class MarketMemoryStore implements QuoteFeed {
       if (!prev) {
         continue;
       }
-      const next: Quote = { ...prev, ...patch, updatedAt: patch.updatedAt ?? Date.now() };
+      const next: Quote = {
+        ...prev,
+        ...patch,
+        updatedAt: patch.updatedAt ?? Date.now(),
+      };
       if (!isSameQuote(prev, next)) {
         this.quotes.set(patch.symbol, next);
         this.pending.add(patch.symbol);
@@ -164,14 +220,20 @@ export class MarketMemoryStore implements QuoteFeed {
     this.symbols = [];
     this.listenersBySymbol.clear();
     this.symbolsListeners.clear();
+    this.lifecycleHandlers.clear();
     this.pending.clear();
     this.symbolsDirty = false;
+    this.paused = false;
   }
 
   // ---- Interno
 
   private requestFlush(): void {
-    if (this.flushScheduled || (this.pending.size === 0 && !this.symbolsDirty)) {
+    if (
+      this.paused ||
+      this.flushScheduled ||
+      (this.pending.size === 0 && !this.symbolsDirty)
+    ) {
       return;
     }
     this.flushScheduled = true;
@@ -180,6 +242,9 @@ export class MarketMemoryStore implements QuoteFeed {
 
   private flush = (): void => {
     this.flushScheduled = false;
+    if (this.paused) {
+      return;
+    }
     const changed = [...this.pending];
     this.pending.clear();
 

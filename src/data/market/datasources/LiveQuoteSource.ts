@@ -6,9 +6,16 @@ import { roundPrice } from './syntheticDataset';
 /**
  * Fuente de ticks en vivo (websocket, polling o simulador). Solo empuja
  * parches ligeros (`QuotePatch`) al store; nunca habla con React.
+ *
+ * Incluye control de ciclo de vida (`pause` / `resume`) para detener el
+ * streaming cuando la app pasa a segundo plano y ejecutar Sync-on-Resume
+ * al volver al primer plano (`active`).
  */
 export interface LiveQuoteSource {
   connect(onPatches: (patches: readonly QuotePatch[]) => void): Unsubscribe;
+  pause(): void;
+  resume(): void;
+  isPaused(): boolean;
 }
 
 /**
@@ -135,8 +142,9 @@ export interface MockLiveQuoteSourceOptions {
  * Motor de simulación de precios en vivo (`MockLiveQuoteSource`).
  *
  * Lee el estado actual desde `QuoteFeed` (puerto del `MarketMemoryStore`),
- * conserva en memoria el `PrecioReferencia` fijo inicial de cada símbolo y
- * emite lotes de `QuotePatch` cada `intervalMs`.
+ * conserva en memoria el `PrecioReferencia` fijo inicial de cada símbolo,
+ * emite lotes de `QuotePatch` cada `intervalMs` y soporta pausa en background
+ * + Sync-on-Resume sobre los activos visibles en el viewport.
  */
 export class MockLiveQuoteSource implements LiveQuoteSource {
   private readonly referencePrices = new Map<Ticker, number>();
@@ -145,6 +153,10 @@ export class MockLiveQuoteSource implements LiveQuoteSource {
   private readonly maxRelativeDelta: number;
   private readonly random: () => number;
   private readonly now: () => Timestamp;
+  private timer: ReturnType<typeof setInterval> | null = null;
+  private activeCallback: ((patches: readonly QuotePatch[]) => void) | null =
+    null;
+  private paused = false;
 
   constructor(
     private readonly quoteFeed: QuoteFeed,
@@ -175,21 +187,18 @@ export class MockLiveQuoteSource implements LiveQuoteSource {
   }
 
   /**
-   * Ejecuta un ciclo de simulación y devuelve los parches generados.
-   * Expuesto públicamente para poder testear ticks de forma síncrona sin timers.
+   * Genera parches para una lista explícita de símbolos.
    */
-  generateTickPatches(): readonly QuotePatch[] {
-    const symbols = this.quoteFeed.getSymbols();
-    if (symbols.length === 0) {
+  private buildPatchesForSymbols(
+    targetSymbols: readonly Ticker[],
+  ): readonly QuotePatch[] {
+    if (targetSymbols.length === 0) {
       return [];
     }
-
-    const targetCount = Math.min(this.batchSize, symbols.length);
-    const selectedSymbols = this.pickRandomSubset(symbols, targetCount);
     const timestamp = this.now();
     const patches: QuotePatch[] = [];
 
-    for (const symbol of selectedSymbols) {
+    for (const symbol of targetSymbols) {
       const currentQuote = this.quoteFeed.getQuote(symbol);
       if (!currentQuote) {
         continue;
@@ -215,8 +224,34 @@ export class MockLiveQuoteSource implements LiveQuoteSource {
     return patches;
   }
 
+  /**
+   * Ejecuta un ciclo de simulación regular seleccionando un subconjunto aleatorio.
+   */
+  generateTickPatches(): readonly QuotePatch[] {
+    const symbols = this.quoteFeed.getSymbols();
+    if (symbols.length === 0) {
+      return [];
+    }
+    const targetCount = Math.min(this.batchSize, symbols.length);
+    const selectedSymbols = this.pickRandomSubset(symbols, targetCount);
+    return this.buildPatchesForSymbols(selectedSymbols);
+  }
+
+  /**
+   * Estrategia Sync-on-Resume:
+   * Genera un snapshot inmediato priorizando todos los activos actualmente
+   * visibles en el viewport (`quoteFeed.getActiveSymbols()`), evitando arrastrar
+   * latencias acumuladas mientras la app estuvo en segundo plano.
+   */
+  generateSyncOnResumePatches(): readonly QuotePatch[] {
+    const activeViewportSymbols = this.quoteFeed.getActiveSymbols();
+    if (activeViewportSymbols.length > 0) {
+      return this.buildPatchesForSymbols(activeViewportSymbols);
+    }
+    return this.generateTickPatches();
+  }
+
   connect(onPatches: (patches: readonly QuotePatch[]) => void): Unsubscribe {
-    // Hidrata precios de referencia de los símbolos ya presentes al conectar
     for (const symbol of this.quoteFeed.getSymbols()) {
       const quote = this.quoteFeed.getQuote(symbol);
       if (quote) {
@@ -224,21 +259,70 @@ export class MockLiveQuoteSource implements LiveQuoteSource {
       }
     }
 
-    const timer = setInterval(() => {
-      const patches = this.generateTickPatches();
-      if (patches.length > 0) {
-        onPatches(patches);
-      }
-    }, this.intervalMs);
+    this.activeCallback = onPatches;
+    if (!this.paused) {
+      this.startTimer();
+    }
 
     return () => {
-      clearInterval(timer);
+      this.stopTimer();
+      if (this.activeCallback === onPatches) {
+        this.activeCallback = null;
+      }
     };
+  }
+
+  isPaused(): boolean {
+    return this.paused;
+  }
+
+  pause(): void {
+    if (this.paused) {
+      return;
+    }
+    this.paused = true;
+    this.stopTimer();
+  }
+
+  resume(): void {
+    if (!this.paused) {
+      return;
+    }
+    this.paused = false;
+
+    if (this.activeCallback) {
+      // Sync-on-Resume: actualización instantánea de los precios visibles
+      const syncPatches = this.generateSyncOnResumePatches();
+      if (syncPatches.length > 0) {
+        this.activeCallback(syncPatches);
+      }
+      this.startTimer();
+    }
   }
 
   /** Limpia los precios de referencia cacheados (útil en tests o rehidratación total). */
   resetReferencePrices(): void {
     this.referencePrices.clear();
+  }
+
+  private startTimer(): void {
+    this.stopTimer();
+    this.timer = setInterval(() => {
+      if (this.paused || !this.activeCallback) {
+        return;
+      }
+      const patches = this.generateTickPatches();
+      if (patches.length > 0) {
+        this.activeCallback(patches);
+      }
+    }, this.intervalMs);
+  }
+
+  private stopTimer(): void {
+    if (this.timer !== null) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
   }
 
   /** Selección parcial tipo Fisher-Yates sin clonar todo el arreglo de 2.100 símbolos. */

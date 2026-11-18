@@ -51,8 +51,8 @@ export const palette = {
   emerald600: '#059669',
   rose400: '#F43F5E',
   rose600: '#DC2626',
-  blue400: '#3B82F6',
-  blue600: '#2563EB',
+  blue400: '#6439ff',
+  blue600: '#6439ff',
   amber400: '#F59E0B',
   amber600: '#D97706',
 } as const;
@@ -65,7 +65,7 @@ export const lightColors: ThemeColors = {
   textPrimary: palette.space950, // #0F172A
   textSecondary: palette.slate600, // #475569
   textMuted: palette.slate400, // #94A3B8
-  accent: palette.blue600, // #2563EB
+  accent: palette.blue600, // #6439ff
   onAccent: palette.white, // #FFFFFF
   positive: palette.emerald600, // #059669
   negative: palette.rose600, // #DC2626
