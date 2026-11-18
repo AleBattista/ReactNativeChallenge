@@ -20,7 +20,6 @@ import {
   formatQuantity,
 } from '../../../core/utils/formatters';
 import type { Ticker } from '../../../domain/shared';
-import { AppButton } from '../../shared/components/AppButton';
 import { AppText } from '../../shared/components/AppText';
 import { ChangeBadge } from '../../shared/components/ChangeBadge';
 import { useAssetInfo, useLiveQuote } from '../hooks/useLiveQuote';
@@ -298,11 +297,32 @@ export const MarketItemRow = memo(function MarketItemRowBase({
               </AppText>
             </View>
 
-            <AppButton
-              label="Ver detalle"
-              accessibilityHint={`Abre la boleta de operación y detalle de ${ticker}`}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Ver detalle de ${ticker}`}
+              accessibilityHint={`Abre la pantalla de detalle y operación de ${ticker}`}
               onPress={handlePressDetail}
-            />
+              style={({ pressed }) => [
+                styles.detailGhostButton,
+                {
+                  backgroundColor: pressed
+                    ? colors.surfaceElevated
+                    : colors.neutralSoft,
+                  borderColor: colors.border,
+                  borderRadius: radii.md,
+                  paddingVertical: spacing.sm,
+                  paddingHorizontal: spacing.md,
+                  gap: spacing.xs,
+                  opacity: pressed ? 0.82 : 1,
+                },
+              ]}>
+              <AppText variant="bodyStrong" color="accent">
+                Ver detalle
+              </AppText>
+              <AppText variant="bodyStrong" color="accent">
+                →
+              </AppText>
+            </Pressable>
           </View>
         </Animated.View>
       ) : null}
@@ -372,6 +392,12 @@ const styles = StyleSheet.create({
   volumeInfo: {
     flex: 1,
     gap: 2,
+  },
+  detailGhostButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
   },
   tabular: {
     fontVariant: ['tabular-nums'],

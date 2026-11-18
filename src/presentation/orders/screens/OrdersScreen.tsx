@@ -184,16 +184,16 @@ export function OrdersScreen({ navigation }: OrdersScreenProps) {
           </View>
         </View>
 
-        {/* Control segmentado de solapas: Tenencias vs Historial */}
+        {/* Control segmentado tipo píldora: Tenencias vs Historial */}
         <View
           accessibilityRole="tablist"
           style={[
             styles.tabSwitcher,
             {
-              backgroundColor: colors.background,
+              backgroundColor: colors.neutralSoft,
               borderColor: colors.border,
-              borderRadius: radii.md,
-              padding: spacing.xxs,
+              borderRadius: radii.pill,
+              padding: spacing.xs,
             },
           ]}>
           <Pressable
@@ -201,22 +201,43 @@ export function OrdersScreen({ navigation }: OrdersScreenProps) {
             accessibilityState={{ selected: isHoldingsTab }}
             accessibilityLabel={`Tenencias, ${safeHoldings.length} activos`}
             onPress={handleSelectHoldingsTab}
-            style={[
+            style={({ pressed }) => [
               styles.tabButton,
+              isHoldingsTab ? styles.activeTabPill : null,
               {
                 backgroundColor: isHoldingsTab
-                  ? colors.accent
+                  ? colors.surface
                   : TRANSPARENT_COLOR,
-                borderRadius: radii.sm,
+                borderColor: isHoldingsTab ? colors.border : TRANSPARENT_COLOR,
+                borderRadius: radii.pill,
                 paddingVertical: spacing.sm,
+                gap: spacing.xs,
+                opacity: pressed ? 0.82 : 1,
               },
             ]}>
             <AppText
               variant="bodyStrong"
-              color={isHoldingsTab ? 'onAccent' : 'textSecondary'}
-              style={styles.tabular}>
-              {`Tenencias (${formatQuantity(safeHoldings.length)})`}
+              color={isHoldingsTab ? 'textPrimary' : 'textSecondary'}>
+              Tenencias
             </AppText>
+            <View
+              style={[
+                styles.countPill,
+                {
+                  backgroundColor: isHoldingsTab
+                    ? colors.neutralSoft
+                    : colors.surface,
+                  borderRadius: radii.pill,
+                  paddingHorizontal: spacing.sm,
+                },
+              ]}>
+              <AppText
+                variant="caption"
+                color={isHoldingsTab ? 'accent' : 'textMuted'}
+                style={styles.tabular}>
+                {formatQuantity(safeHoldings.length)}
+              </AppText>
+            </View>
           </Pressable>
 
           <Pressable
@@ -224,22 +245,43 @@ export function OrdersScreen({ navigation }: OrdersScreenProps) {
             accessibilityState={{ selected: !isHoldingsTab }}
             accessibilityLabel={`Historial de órdenes, ${safeOrders.length} registros`}
             onPress={handleSelectHistoryTab}
-            style={[
+            style={({ pressed }) => [
               styles.tabButton,
+              !isHoldingsTab ? styles.activeTabPill : null,
               {
                 backgroundColor: !isHoldingsTab
-                  ? colors.accent
+                  ? colors.surface
                   : TRANSPARENT_COLOR,
-                borderRadius: radii.sm,
+                borderColor: !isHoldingsTab ? colors.border : TRANSPARENT_COLOR,
+                borderRadius: radii.pill,
                 paddingVertical: spacing.sm,
+                gap: spacing.xs,
+                opacity: pressed ? 0.82 : 1,
               },
             ]}>
             <AppText
               variant="bodyStrong"
-              color={!isHoldingsTab ? 'onAccent' : 'textSecondary'}
-              style={styles.tabular}>
-              {`Historial (${formatQuantity(safeOrders.length)})`}
+              color={!isHoldingsTab ? 'textPrimary' : 'textSecondary'}>
+              Historial
             </AppText>
+            <View
+              style={[
+                styles.countPill,
+                {
+                  backgroundColor: !isHoldingsTab
+                    ? colors.neutralSoft
+                    : colors.surface,
+                  borderRadius: radii.pill,
+                  paddingHorizontal: spacing.sm,
+                },
+              ]}>
+              <AppText
+                variant="caption"
+                color={!isHoldingsTab ? 'accent' : 'textMuted'}
+                style={styles.tabular}>
+                {formatQuantity(safeOrders.length)}
+              </AppText>
+            </View>
           </Pressable>
         </View>
       </View>
@@ -383,8 +425,20 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  activeTabPill: {
+    elevation: 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  countPill: {
+    paddingVertical: 1,
   },
   listContainer: {
     flex: 1,

@@ -5,6 +5,7 @@ import { FavoritesScreen } from '../favorites/screens/FavoritesScreen';
 import { ThemeToggleSwitch } from '../market/components/ThemeToggleSwitch';
 import { MarketScreen } from '../market/screens/MarketScreen';
 import { OrdersScreen } from '../orders/screens/OrdersScreen';
+import { ScreenHeaderTitle } from '../shared/components/ScreenHeaderTitle';
 import { TabIcon } from './TabIcon';
 import type { BottomTabParamList } from './types';
 
@@ -18,13 +19,32 @@ interface TabIconRenderProps {
 
 // Definidos fuera del render: evita recrear componentes en cada render
 const renderMarketIcon = (props: TabIconRenderProps) => (
-  <TabIcon glyph="▲" {...props} />
+  <TabIcon variant="market" {...props} />
 );
 const renderFavoritesIcon = (props: TabIconRenderProps) => (
-  <TabIcon glyph="★" {...props} />
+  <TabIcon variant="favorites" {...props} />
 );
 const renderOrdersIcon = (props: TabIconRenderProps) => (
-  <TabIcon glyph="≡" {...props} />
+  <TabIcon variant="orders" {...props} />
+);
+
+const renderMarketHeaderTitle = () => (
+  <ScreenHeaderTitle
+    title="Mercado"
+    subtitle="BCBA · Cotizaciones en tiempo real"
+  />
+);
+const renderFavoritesHeaderTitle = () => (
+  <ScreenHeaderTitle
+    title="Favoritos"
+    subtitle="Seguimiento personalizado en vivo"
+  />
+);
+const renderOrdersHeaderTitle = () => (
+  <ScreenHeaderTitle
+    title="Órdenes"
+    subtitle="Portfolio y estado de operaciones"
+  />
 );
 const renderMarketHeaderRight = () => <ThemeToggleSwitch />;
 
@@ -47,6 +67,7 @@ export function MainTabNavigator() {
         },
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.textPrimary,
+        headerTitleAlign: 'left',
         headerShadowVisible: false,
       }}>
       <Tab.Screen
@@ -54,6 +75,7 @@ export function MainTabNavigator() {
         component={MarketScreen}
         options={{
           title: 'Mercado',
+          headerTitle: renderMarketHeaderTitle,
           tabBarIcon: renderMarketIcon,
           headerRight: renderMarketHeaderRight,
         }}
@@ -61,12 +83,20 @@ export function MainTabNavigator() {
       <Tab.Screen
         name="Favorites"
         component={FavoritesScreen}
-        options={{ title: 'Favoritos', tabBarIcon: renderFavoritesIcon }}
+        options={{
+          title: 'Favoritos',
+          headerTitle: renderFavoritesHeaderTitle,
+          tabBarIcon: renderFavoritesIcon,
+        }}
       />
       <Tab.Screen
         name="Orders"
         component={OrdersScreen}
-        options={{ title: 'Órdenes', tabBarIcon: renderOrdersIcon }}
+        options={{
+          title: 'Órdenes',
+          headerTitle: renderOrdersHeaderTitle,
+          tabBarIcon: renderOrdersIcon,
+        }}
       />
     </Tab.Navigator>
   );
