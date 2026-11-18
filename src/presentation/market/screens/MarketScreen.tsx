@@ -12,6 +12,7 @@ import {
   MarketItemRow,
 } from '../components/MarketItemRow';
 import { MarketSearchBar } from '../components/MarketSearchBar';
+import { MarketSortSheet } from '../components/MarketSortSheet';
 import { useMarketCatalog } from '../hooks/useMarketCatalog';
 
 /**
@@ -27,7 +28,8 @@ type Props = MainTabScreenProps<'Market'>;
  *    `estimatedItemSize={ESTIMATED_ROW_HEIGHT}`.
  *  - Gestiona localmente qué filas están expandidas mediante un `Set<Ticker>`
  *    (`expandedTickers`), sin contaminar el estado global de Zustand.
- *  - Pasa `isExpanded` y `onToggle(ticker)` estables a cada `MarketItemRow`.
+ *  - Integra `MarketSortSheet` para ordenar imperativamente sobre los resultados
+ *    filtrados conservando la preferencia al navegar hacia `AssetDetail` y volver.
  */
 export function MarketScreen({ navigation }: Props) {
   const { colors, spacing } = useTheme();
@@ -38,6 +40,8 @@ export function MarketScreen({ navigation }: Props) {
     searchQuery,
     setSearchQuery,
     clearSearch,
+    sortConfig,
+    applySort,
     filteredSymbols,
     totalCount,
     retry,
@@ -48,6 +52,15 @@ export function MarketScreen({ navigation }: Props) {
   const [expandedTickers, setExpandedTickers] = useState<ReadonlySet<Ticker>>(
     () => new Set<Ticker>(),
   );
+  const [isSortSheetVisible, setIsSortSheetVisible] = useState(false);
+
+  const handleOpenSortSheet = useCallback(() => {
+    setIsSortSheetVisible(true);
+  }, []);
+
+  const handleCloseSortSheet = useCallback(() => {
+    setIsSortSheetVisible(false);
+  }, []);
 
   const handleToggleExpand = useCallback((ticker: Ticker) => {
     if (!ticker) {
@@ -161,6 +174,8 @@ export function MarketScreen({ navigation }: Props) {
         onClear={clearSearch}
         resultCount={safeFilteredSymbols.length}
         totalCount={totalCount ?? 0}
+        sortConfig={sortConfig}
+        onPressSort={handleOpenSortSheet}
       />
 
       {errorMessage ? (
@@ -207,6 +222,13 @@ export function MarketScreen({ navigation }: Props) {
           }
         />
       </View>
+
+      <MarketSortSheet
+        visible={isSortSheetVisible}
+        currentSort={sortConfig}
+        onApplySort={applySort}
+        onClose={handleCloseSortSheet}
+      />
     </View>
   );
 }

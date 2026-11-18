@@ -3,6 +3,10 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useTheme } from '../../../core/theme/ThemeProvider';
 import { formatQuantity } from '../../../core/utils/formatters';
 import { AppText } from '../../shared/components/AppText';
+import {
+  formatSortBadgeLabel,
+  type MarketSortConfig,
+} from './MarketSortSheet';
 
 export interface MarketSearchBarProps {
   readonly value: string;
@@ -10,10 +14,13 @@ export interface MarketSearchBarProps {
   readonly onClear: () => void;
   readonly resultCount: number;
   readonly totalCount: number;
+  readonly sortConfig?: MarketSortConfig | null;
+  readonly onPressSort?: () => void;
 }
 
 /**
- * Barra de búsqueda instantánea en memoria por símbolo o descripción.
+ * Barra de búsqueda instantánea en memoria por símbolo o descripción,
+ * con botón de acceso directo al Bottom Sheet de Ordenamiento.
  */
 export const MarketSearchBar = memo(function MarketSearchBarBase({
   value,
@@ -21,8 +28,12 @@ export const MarketSearchBar = memo(function MarketSearchBarBase({
   onClear,
   resultCount,
   totalCount,
+  sortConfig = null,
+  onPressSort,
 }: MarketSearchBarProps) {
   const { colors, spacing, radii, typography } = useTheme();
+  const hasActiveSort = sortConfig !== null;
+  const sortLabel = formatSortBadgeLabel(sortConfig);
 
   return (
     <View
@@ -83,6 +94,34 @@ export const MarketSearchBar = memo(function MarketSearchBarBase({
         <AppText variant="caption" color="textSecondary" style={styles.tabular}>
           {`${formatQuantity(resultCount)} de ${formatQuantity(totalCount)} activos`}
         </AppText>
+
+        {onPressSort ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Ordenar activos, actual: ${sortLabel}`}
+            hitSlop={8}
+            onPress={onPressSort}
+            style={({ pressed }) => [
+              styles.sortButton,
+              {
+                backgroundColor: hasActiveSort
+                  ? colors.accent
+                  : colors.background,
+                borderColor: hasActiveSort ? colors.accent : colors.border,
+                borderRadius: radii.sm,
+                paddingHorizontal: spacing.sm,
+                paddingVertical: spacing.xxs,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}>
+            <AppText
+              variant="caption"
+              color={hasActiveSort ? 'onAccent' : 'textSecondary'}
+              style={styles.sortButtonText}>
+              {sortLabel}
+            </AppText>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -111,16 +150,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 10
+    marginTop: 6,
   },
-  liveIndicator: {
-    flexDirection: 'row',
+  sortButton: {
+    borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  sortButtonText: {
+    fontWeight: '600',
   },
   tabular: {
     fontVariant: ['tabular-nums'],
@@ -128,4 +166,3 @@ const styles = StyleSheet.create({
 });
 
 export default MarketSearchBar;
-

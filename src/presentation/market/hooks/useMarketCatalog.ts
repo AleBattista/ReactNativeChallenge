@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDependencies } from '../../../app/di/DependenciesProvider';
 import type { Ticker } from '../../../domain/shared';
+import {
+  sortMarketTickers,
+  type MarketSortConfig,
+} from '../components/MarketSortSheet';
 import { useMarketSymbols } from './useLiveQuote';
 
 export type MarketLoadStatus = 'loading' | 'ready' | 'error';
@@ -18,6 +22,8 @@ export interface UseMarketCatalogResult {
   readonly searchQuery: string;
   readonly setSearchQuery: (query: string) => void;
   readonly clearSearch: () => void;
+  readonly sortConfig: MarketSortConfig | null;
+  readonly applySort: (sort: MarketSortConfig | null) => void;
   readonly filteredSymbols: readonly Ticker[];
   readonly totalCount: number;
   readonly retry: () => void;
@@ -26,12 +32,8 @@ export interface UseMarketCatalogResult {
 
 /**
  * Orquesta la carga inicial del catálogo de 2.100+ activos, la conexión al
- * streaming en vivo (`connectLiveQuotes`) y el filtrado instantáneo en memoria
- * por símbolo o descripción.
- *
- * Devuelve únicamente `readonly Ticker[]` a la `FlashList`: así los ticks de
- * precios nunca alteran el array `data` de la lista y solo se re-renderizan
- * las celdas visibles cuyo ticker haya cambiado en `MarketMemoryStore`.
+ * streaming en vivo (`connectLiveQuotes`), el filtrado instantáneo en memoria
+ * y el ordenamiento imperativo sobre los resultados filtrados.
  */
 export function useMarketCatalog(): UseMarketCatalogResult {
   const { marketRepository, quoteFeed } = useDependencies();
@@ -43,6 +45,7 @@ export function useMarketCatalog(): UseMarketCatalogResult {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortConfig, setSortConfig] = useState<MarketSortConfig | null>(null);
   const mountedRef = useRef(true);
 
   const loadAssets = useCallback(
@@ -99,7 +102,8 @@ export function useMarketCatalog(): UseMarketCatalogResult {
     [storeSymbols, quoteFeed],
   );
 
-  const filteredSymbols = useMemo<readonly Ticker[]>(() => {
+  // 1. Filtrado en vivo por símbolo o descripción
+  const matchedSymbols = useMemo<readonly Ticker[]>(() => {
     const normalized = searchQuery.trim().toLowerCase();
     if (normalized.length === 0) {
       return storeSymbols;
@@ -115,6 +119,16 @@ export function useMarketCatalog(): UseMarketCatalogResult {
     }
     return matches;
   }, [searchQuery, storeSymbols, searchIndex]);
+
+  // 2. Ordenamiento imperativo sobre los resultados ya filtrados
+  const filteredSymbols = useMemo<readonly Ticker[]>(
+    () => sortMarketTickers(matchedSymbols, sortConfig, quoteFeed.getQuote),
+    [matchedSymbols, sortConfig, quoteFeed.getQuote],
+  );
+
+  const applySort = useCallback((nextSort: MarketSortConfig | null) => {
+    setSortConfig(nextSort ? { ...nextSort } : null);
+  }, []);
 
   const clearSearch = useCallback(() => {
     setSearchQuery('');
@@ -135,6 +149,8 @@ export function useMarketCatalog(): UseMarketCatalogResult {
     searchQuery,
     setSearchQuery,
     clearSearch,
+    sortConfig,
+    applySort,
     filteredSymbols,
     totalCount: storeSymbols.length,
     retry,
