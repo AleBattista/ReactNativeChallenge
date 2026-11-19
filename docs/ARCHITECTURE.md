@@ -113,22 +113,12 @@ Con 2.100+ activos generados por `syntheticDataset.ts` y lotes de 120 *ticks* ca
    - Los *ticks* acumulados en un mismo turno del *event loop* se agrupan en `pending: Set<Ticker>` y se despachan en un único `flush` asíncrono, despertando únicamente a los *listeners* de los símbolos modificados.
 
 ### Conexión Celda por Celda con `useSyncExternalStore`
-```mermaid
-sequenceDiagram
-  participant L as MockLiveQuoteSource
-  participant S as MarketMemoryStore (Map/Set)
-  participant RowA as MarketItemRow ("ALUA")
-  participant RowB as MarketItemRow ("AGRO")
 
-  Note over RowA,RowB: FlashList recibe data = readonly Ticker[] (referencia fija)
-  RowA->>S: useSyncExternalStore(subscribe("ALUA"), getQuote("ALUA"))
-  RowB->>S: useSyncExternalStore(subscribe("AGRO"), getQuote("AGRO"))
-  L->>S: applyPatches([{ symbol: "ALUA", lastPrice: 945 }])
-  Note over S: Reemplaza Quote de ALUA; AGRO conserva su referencia
-  S-->>RowA: Notifica solo a Set<Listener> de "ALUA"
-  RowA->>S: getQuote("ALUA") → nuevo snapshot (re-renderiza solo RowA)
-  Note over RowB: 0 ejecuciones, 0 re-renders
-```
+En lugar de que toda la pantalla o toda la lista escuche los cambios de precios, cada fila (`MarketItemRow`) se suscribe **solo a su propio ticker** (por ejemplo, `ALUA` o `AGRO`) usando `useSyncExternalStore`:
+
+- Cuando llega un nuevo precio para `ALUA`, el store en memoria (`Map` + `Set` de *listeners*) avisa **únicamente a la celda de `ALUA`**.
+- `FlashList` mantiene su arreglo de símbolos (`readonly Ticker[]`) sin cambios de referencia y las demás filas (como `AGRO`) no se re-renderizan.
+- Así evitamos re-renders en cascada y mantenemos la lista fluida incluso con más de 2.100 activos actualizándose en vivo.
 
 ---
 
@@ -180,9 +170,7 @@ A diferencia del streaming de mercado (que es efímero y vive en `MarketMemorySt
 | `maturityDate` o `tir` presentes | Identifica bonos / renta fija | `instrumentType: 'FIXED_INCOME'` |
 
 ### Reglas del Motor en Vivo (`MockLiveQuoteSource`) y Derivados en UI
-1. **Precio de Referencia Fijo Inicial:** Como `ultimoCierre` viene en `0` en gran parte del catálogo, al inicializar cada activo se fija:
-   $$\text{PrecioReferencia} = \frac{\text{ultimoPrecio\_ini}}{1 + \frac{\text{variacionDiaria\_ini}}{100}}$$
-   En cada *tick* posterior ($\Delta \in [-0.5\%, +0.5\%]$), la variación diaria se recalcula en tiempo real contra ese valor fijo:
-   $$\text{changePercent} = \left(\frac{\text{nuevoPrecio}}{\text{PrecioReferencia}} - 1\right) \times 100$$
-2. **Spread Constante y Rango Intradía:** Las puntas `bid.price` y `ask.price` se escalan en la misma proporción exacta ($\frac{\text{nuevoPrecio}}{\text{lastPrice}}$) que el último precio, y `dayLow` / `dayHigh` se expanden automáticamente si el nuevo precio los perfora.
-3. **Clamping Seguro en Barra de Rango (`AssetDetailScreen`):** La posición del precio actual entre `dayLow` y `dayHigh` se acota estrictamente al intervalo $[0, 1]$ (`computeClampedDayRangeProgress`), impidiendo desbordes visuales ante cotizaciones fuera de rango o `dayLow === dayHigh`.
+
+1. **Precio de Referencia Fijo Inicial:** Como `ultimoCierre` viene en `0` en gran parte del catálogo, al inicializar cada activo se calcula un precio de referencia base a partir del precio inicial y su variación inicial (`precioReferencia = ultimoPrecioInicial / (1 + variacionDiariaInicial / 100)`). En cada *tick* posterior (movimientos de hasta `±0.5%`), la variación diaria se recalcula en tiempo real tomando como base ese valor inicial fijo.
+2. **Spread Constante y Rango Intradía:** Las puntas de compra (`bid`) y venta (`ask`) se ajustan en la misma proporción que el último precio, y los mínimos y máximos del día (`dayLow` / `dayHigh`) se actualizan automáticamente si el nuevo precio los supera.
+3. **Barra de Rango con Clamping (`AssetDetailScreen`):** La posición del precio actual entre el mínimo y el máximo del día se mantiene acotada entre `0` y `1` (`computeClampedDayRangeProgress`), evitando desbordes visuales si un precio cotiza fuera de rango o si el mínimo y el máximo coinciden.
