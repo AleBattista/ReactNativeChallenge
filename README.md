@@ -4,9 +4,9 @@
 
 ## 📸 Screenshots
 
-| Mercado (Listado & Streaming) |      Detalle de Activo       |    Simulación de Órdenes     |
-| :---------------------------: | :--------------------------: | :--------------------------: |
-| _(Insertar screenshot aquí)_  | _(Insertar screenshot aquí)_ | _(Insertar screenshot aquí)_ |
+| Mercado (Listado & Streaming) | Detalle de Activo | Simulación de Órdenes |
+| :---: | :---: | :---: |
+| ![Mercado y streaming](./docs/screenshots/market-streaming.png) | ![Detalle de activo](./docs/screenshots/asset-detail.png) | ![Simulación de órdenes](./docs/screenshots/order-modal.png) |
 
 ---
 
@@ -86,14 +86,13 @@ Para asegurar que la arquitectura de streaming atómico cumpla con los estándar
 - **React DevTools Profiler:** Para inspeccionar los ciclos de commit, validar que no existan re-renders en cascada y medir el costo en milisegundos de cada actualización.
 
 ### Resultados obtenidos
-
-- **Fluidez en UI y JS:** **60 FPS estables** sin caídas de frames (_dropped frames_) durante el scroll intensivo en `FlashList`.
-- **Costo de Renderizado:** Cada commit de actualización de cotizaciones toma **<menos de 4 ms** (muy por debajo del límite de 16.6 ms necesarios para sostener 60 FPS).
-- **Eficiencia de Suscripción:** El _Flamegraph_ confirma que ante actualizaciones masivas en memoria, **solo se re-renderizan las celdas visibles en el viewport** cuyo precio varió, evitando trabajo innecesario en el resto de la lista.
+* **Fluidez en UI:** Cercana a 60 FPS en pruebas de estrés con el catálogo completo, streaming continuo y scroll intensivo en modo desarrollo/emulador. Como el contador del monitor es acumulado durante toda la sesión, es esperable que los *dropped frames* (cuadros sueltos que no llegan a tiempo) y los *stutters (4+)* (trabones más notorios de 4 o más cuadros seguidos) suban con los minutos de uso y navegación (por ejemplo, tras ~10 minutos de prueba continua). En la práctica, el movimiento se mantiene fluido y sin bloqueos prolongados.
+* **Costo de Renderizado:** Cada commit de actualización de cotizaciones toma menos de 4 ms (muy por debajo del límite de 16,6 ms que tenemos por cuadro para sostener 60 FPS), dejando margen libre para responder al scroll y a la interacción del usuario.
+* **Eficiencia de Suscripción:** El Flamegraph confirma que ante actualizaciones masivas en memoria, solo se re-renderizan las celdas visibles en el *viewport* cuyo precio varió, evitando trabajo innecesario en el resto de la lista.
 
 | React DevTools Profiler (Aislamiento & ms) |     Performance Monitor (60 FPS en vivo)      |
 | :----------------------------------------: | :-------------------------------------------: |
-| _(Insertar screenshot del Profiler aquí)_  | _(Insertar screenshot del Perf Monitor aquí)_ |
+| _(Insertar screenshot del Profiler aquí)_  | ![Performance Monitor](./docs/screenshots/perf-monitor.png) |
 
 ## 🔭 Qué quedó afuera y Cómo lo encararía
 
@@ -103,6 +102,7 @@ Para cumplir con el alcance del challenge priorizando una arquitectura sólida y
 - **Pulido visual y gráficos en tiempo real:** Prioricé la fluidez y la arquitectura por sobre el diseño visual avanzado. Con más tiempo, trabajaría en una estética más distintiva (mayor jerarquía tipográfica, cards con más aire y menos bordes rígidos) e incorporaría un gráfico intradiario.
 - **Tests End-to-End (E2E):** Si bien la lógica del motor y el dominio cuentan con pruebas unitarias, sumaría flujos automatizados para validar de punta a punta el recorrido crítico (buscar un activo, agregarlo a favoritos y completar una orden).
 - **Separación de estilos y revisión de inline styles:** Para evitar que pantallas (como por ejemplo OrdersScreen) se vuelvan demasiado largas, sería conveniente sacar los estilos a archivos dedicados y repasar que no queden estilos inline sueltos en toda la app, manteniendo la lógica visual bien ordenada y más liviana de leer.
+* **Mejoras de UX en la carga de órdenes y flujos clave:** Para mí la UX es fundamental —especialmente al operar, donde cualquier fricción puede generar errores o dudas—, pero en este alcance prioricé la base técnica y el rendimiento. Un ejemplo concreto es la carga de cantidad en las ordenes de compra/venta: hoy se resuelve con un input directo, y en una siguiente iteración sumaría controles más ágiles como chips de porcentajes rápidos (ej. 25%, 50%, 100% del saldo o tenencia), cálculo bidireccional entre monto y nominales o feedback más claro antes de confirmar.
 
 ## 📂 Documentación Extendida y Arquitectura (/docs)
 
