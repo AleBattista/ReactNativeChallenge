@@ -17,8 +17,8 @@ Asegúrate de haber completado la [Guía de Entorno de React Native](https://rea
 ### 1. Clonar e instalar dependencias
 
 ```bash
-git clone <url-del-repositorio>
-cd <nombre-del-proyecto>
+git clone https://github.com/AleBattista/ReactNativeChallenge.git
+cd ReactNativeChallenge
 npm install
 ```
 
