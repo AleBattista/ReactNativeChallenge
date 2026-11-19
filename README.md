@@ -102,6 +102,7 @@ Para cumplir con el alcance del challenge priorizando una arquitectura sólida y
 - **Bloqueo de precio (_Price Lock_) en la carga de órdenes:** Hoy la orden de compra/venta sigue actualizando su valor en tiempo real mientras el usuario ingresa los datos. En una siguiente iteración, al pasar a la pantalla de revisión congelaría la cotización por una ventana corta (ej. 15 segundos) o mostraría un aviso de confirmación si el precio se mueve brusco antes de confirmar la operación.
 - **Pulido visual y gráficos en tiempo real:** Prioricé la fluidez y la arquitectura por sobre el diseño visual avanzado. Con más tiempo, trabajaría en una estética más distintiva (mayor jerarquía tipográfica, cards con más aire y menos bordes rígidos) e incorporaría un gráfico intradiario.
 - **Tests End-to-End (E2E):** Si bien la lógica del motor y el dominio cuentan con pruebas unitarias, sumaría flujos automatizados para validar de punta a punta el recorrido crítico (buscar un activo, agregarlo a favoritos y completar una orden).
+- **Separación de estilos y revisión de inline styles:** Para evitar que pantallas (como por ejemplo OrdersScreen) se vuelvan demasiado largas, sería conveniente sacar los estilos a archivos dedicados y repasar que no queden estilos inline sueltos en toda la app, manteniendo la lógica visual bien ordenada y más liviana de leer.
 
 ## 📂 Documentación Extendida y Arquitectura (/docs)
 
