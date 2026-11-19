@@ -90,7 +90,7 @@ Para asegurar que la arquitectura de streaming atómico cumpla con los estándar
 * **Costo de Renderizado y Eficiencia de Suscripción:** En la captura del Flamegraph (commit `11 / 44`), contenedores superiores como `MarketScreen`, `MarketSearchBarBase (Memo)` y `FlashList (Memo)` permanecen sin re-renderizar mientras la actividad se concentra en un subárbol puntual dentro de `MarketItemRow`, con duraciones del orden de fracciones de milisegundo (`0.2ms of 0.5ms` en el nodo inspeccionado).
 * **Eficiencia de Suscripción:** El Flamegraph confirma que ante actualizaciones masivas en memoria, solo se re-renderizan las celdas visibles en el *viewport* cuyo precio varió, evitando trabajo innecesario en el resto de la lista.
 
-| React DevTools Profiler (Aislamiento & ms) |     Performance Monitor (60 FPS en vivo)      |
+| React DevTools Profiler (Aislamiento & ms) |     Performance Monitor (UI FPS & Stutters)      |
 | :----------------------------------------: | :-------------------------------------------: |
 | ![ DevTools Profiler](./docs/screenshots/devtools-profiler.png)  | ![Performance Monitor](./docs/screenshots/perf-monitor.png) |
 
@@ -102,7 +102,7 @@ Para cumplir con el alcance del challenge priorizando una arquitectura sólida y
 - **Pulido visual y gráficos en tiempo real:** Prioricé la fluidez y la arquitectura por sobre el diseño visual avanzado. Con más tiempo, trabajaría en una estética más distintiva (mayor jerarquía tipográfica, cards con más aire y menos bordes rígidos) e incorporaría un gráfico intradiario.
 - **Tests End-to-End (E2E):** Si bien la lógica del motor y el dominio cuentan con pruebas unitarias, sumaría flujos automatizados para validar de punta a punta el recorrido crítico (buscar un activo, agregarlo a favoritos y completar una orden).
 - **Separación de estilos y revisión de inline styles:** Para evitar que pantallas (como por ejemplo OrdersScreen) se vuelvan demasiado largas, sería conveniente sacar los estilos a archivos dedicados y repasar que no queden estilos inline sueltos en toda la app, manteniendo la lógica visual bien ordenada y más liviana de leer.
-- **Mejoras de UX en la carga de órdenes y flujos clave:** Para mí la UX es fundamental —especialmente al operar, donde cualquier fricción puede generar errores o dudas—, pero en este alcance prioricé la base técnica y el rendimiento. Un ejemplo concreto es la carga de cantidad en las ordenes de compra/venta: hoy se resuelve con un input directo, y en una siguiente iteración sumaría controles más ágiles como chips de porcentajes rápidos (ej. 25%, 50%, 100% del saldo o tenencia), cálculo bidireccional entre monto y nominales o feedback más claro antes de confirmar.
+- **Mejoras de UX en la carga de órdenes y flujos clave:** Para mí la UX es fundamental —especialmente al operar, donde cualquier fricción puede generar errores o dudas—, pero en este alcance prioricé la base técnica y el rendimiento. Un ejemplo concreto es la carga de cantidad en las órdenes de compra/venta: hoy se resuelve con un input directo, y en una siguiente iteración sumaría controles más ágiles como chips de porcentajes rápidos (ej. 25%, 50%, 100% del saldo o tenencia), cálculo bidireccional entre monto y nominales o feedback más claro antes de confirmar.
 
 ## 📂 Documentación Extendida y Arquitectura (/docs)
 
