@@ -23,17 +23,6 @@ Separamos estrictamente el estado de la aplicación según su **frecuencia de mu
 
 La aplicación se divide en tres capas concéntricas (`domain`, `data`, `presentation`), más dos módulos transversales (`core` y `app`):
 
-```mermaid
-flowchart LR
-  P["presentation (React Native / UI)"] --> D["domain (TypeScript puro)"]
-  DA["data (DTOs, Mappers, MarketMemoryStore)"] --> D
-  APP["app (DI Container + Zustand Stores)"] --> DA
-  APP --> D
-  P --> APP
-  P --> C["core (theme Dark/Light, formatters es-AR)"]
-  DA --> CU["core/utils"]
-```
-
 - **Cumplimiento estático mediante ESLint (`.eslintrc.js`):** La regla `no-restricted-imports` bloquea en tiempo de compilación/linteo cualquier intento de:
   - Importar `react`, `react-native`, `data`, `presentation`, `app` o `core` dentro de `src/domain/**`.
   - Importar `react`, `react-native` o `presentation` dentro de `src/data/**`.
@@ -162,27 +151,6 @@ sequenceDiagram
 ## 5. Gestión del Ciclo de Vida (`AppState`) y Estrategia *Sync-on-Resume*
 
 Para optimizar batería, CPU y frescura de datos, `DependenciesProvider` escucha las transiciones de `AppState` (`active` vs. `background` / `inactive`) y gobierna el puerto `QuoteFeed` sin acoplar ninguna pantalla:
-
-```mermaid
-sequenceDiagram
-  participant OS as React Native AppState
-  participant DP as DependenciesProvider
-  participant S as MarketMemoryStore
-  participant L as MockLiveQuoteSource
-
-  OS->>DP: change → "background" / "inactive"
-  DP->>S: quoteFeed.pause()
-  S->>L: onPause() → clearInterval(timer)
-  Note over S,L: 0 timers activos, 0 notificaciones a React en background
-
-  OS->>DP: change → "active"
-  DP->>S: quoteFeed.resume()
-  S->>L: onResume()
-  L->>S: getActiveSymbols() (activos suscritos en el viewport actual)
-  L->>S: applyPatches(syncOnResumePatches) (snapshot fresco inmediato)
-  Note over L: Reinicia setInterval continuo (2.5 s)
-  S-->>DP: Flush inmediato a las celdas visibles
-```
 
 - **Por qué `getActiveSymbols()` es exacto:** Como `useSyncExternalStore` suscribe cada celda al montarse en el *viewport* de `FlashList` y la desuscribe al salir, `[...this.listenersBySymbol.keys()]` en `MarketMemoryStore` refleja en todo momento el conjunto exacto de activos visibles por el usuario.
 

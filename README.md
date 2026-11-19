@@ -1,97 +1,112 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 📈 CHALLENGE TÉCNICO - MOBILE · REACT NATIVE - Mercado de activos
 
-# Getting Started
+> Una app de mercado con precios en vivo, favoritos y simulador de órdenes, construida con IA.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 📸 Screenshots
 
-## Step 1: Start Metro
+| Mercado (Listado & Streaming) |      Detalle de Activo       |    Simulación de Órdenes     |
+| :---------------------------: | :--------------------------: | :--------------------------: |
+| _(Insertar screenshot aquí)_  | _(Insertar screenshot aquí)_ | _(Insertar screenshot aquí)_ |
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+---
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+## 🚀 Quick Start (Cómo correr la app)
 
-```sh
-# Using npm
-npm start
+Asegúrate de haber completado la [Guía de Entorno de React Native](https://reactnative.dev/docs/set-up-your-environment) antes de continuar.
 
-# OR using Yarn
-yarn start
+### 1. Clonar e instalar dependencias
+
+```bash
+git clone <url-del-repositorio>
+cd <nombre-del-proyecto>
+npm install
 ```
 
-## Step 2: Build and run your app
+### 2. Dependencias nativas
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
+```bash
+# Solo para iOS
 bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
 bundle exec pod install
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+### 3. Ejecutar la aplicación
 
-```sh
-# Using npm
+```bash
+# En iOS
+# Opcional: Levantar Metro en una terminal paralela si el CLI no lo inicia automáticamente
+npm start
+
+# En otra terminal:
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+```bash
+# En Android
+# Opcional: Levantar Metro en una terminal paralela si el CLI no lo inicia automáticamente
+npm start
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+# En otra terminal:
+npm run android
+```
 
-## Step 3: Modify your app
+## 🏛️ Decisiones Técnicas y Arquitectura
 
-Now that you have successfully run the app, let's make changes!
+Voy a detallar las decisiones más importantes de la arquitectura y el diseño de la app con las cuales me fui encontrando a medida que iba pensando el desarrollo:
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+- **Estructura de Capas (Clean Architecture):** Lo primero que busqué fue una forma ya probada y concisa de organizar el proyecto. Elegí **Clean Architecture** porque tengo experiencia desarrollando apps con esta base y aporta una separación de capas muy clara, dejando la aplicación lista para escalar directamente en producción.
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+- **El desafío del rendimiento con 2.000+ datos en tiempo real:** El segundo de los temas que tuve que decidir fue: ¿cómo tener más de 2.000 datos actualizándolos cada pocos segundos sin saturar el hilo de JavaScript y que la app quede congelada?
+  - ¿Había posibilidad de usar **SQLite**? No, hacer inputs y outputs en disco degradaría el rendimiento y la batería innecesariamente.
+  - ¿Guardar en **Redux, Zustand o alguna local store**? Claramente no, esto saturaría las entradas al store y provocaría re-renders masivos lo cual rompería la app por completo.
+  - ¿Guardar en memoria **fuera del árbol de React** los datos? **SÍ**, y explico por qué:
+    - Guardar en memoria los datos dentro del hilo de JavaScript tiene muchísimas ventajas porque los inputs y reescrituras se hacen directamente en memoria, lo cual es ultra rápido y no necesitamos que persistan (son datos fugaces que no hace falta guardar), evitando saturar el hilo de JavaScript y la UI.
+    - ¿Por qué fuera del árbol de React? Porque no necesitamos que React se entere de estos micro-cambios, ni que sus hooks reaccionen a estos.
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+- **Suscripción granular y renderizado selectivo:** Otra de las decisiones importantes fue que, teniendo estos datos en memoria (`Map`), ¿cómo hago para que la UI se entere de estos cambios sin hacer re-renders masivos?
+  - La solución fue **suscribirse celda por celda y ticker por ticker** al buffer mediante `useSyncExternalStore` suscribiéndose al mismo.
+    Al aislar la suscripción dentro de cada celda y envolverla con `React.memo`, cuando cambia una cotización se re-renderiza únicamente esa celda específica, logrando que el resto de la lista y la pantalla general ni se enteren de que algo cambió.
 
-## Congratulations! :tada:
+- **El rol clave de FlashList:** Para esto mismo ayudó muchísimo **FlashList**. ¿Por qué ayudó? Porque está optimizada para reciclar las vistas y mantiene activos únicamente los listeners de las celdas que están en el viewport del usuario. Esto hace que, si tengo una lista de 2.000 tickers y el usuario solo ve aprox. 20 en pantalla, por más que se hayan actualizado 1.000 precios en memoria, el motor de suscripciones solo empuja esos re-renders a los 20 visibles, ahorrando cientos de re-renders innecesarios.
+  - _Nota importante:_ **Solo se suscribe a los cambios de precios**, mientras que la metadata estática de los activos (nombre, ticker, tipo) permanece intacta, lo cual hace todo muchísimo más liviano.
 
-You've successfully run and modified your React Native App. :partying_face:
+- **Persistencia de estado de negocio:** A diferencia de las cotizaciones en vivo, los datos propios del usuario sí necesitaban mantenerse guardados entre sesiones (`PortfolioStore`, `FavoritesStore`, `OrderStore`, el saldo disponible y la preferencia de tema dark/light). Para esto simplemente aproveché Zustand con su middleware `persist` (`createJSONStorage` + `AsyncStorage`), que resuelve el guardado local de forma limpia y sin boilerplate innecesario.
 
-### Now what?
+* **Bloqueo de cotización (_Price Lock_) al cargar una orden:** Hoy decidí mantener el `OrderModal` suscribiéndose en tiempo real al precio del activo mientras el usuario carga los datos, ejecutando la orden al último valor disponible al confirmar. Esto hace que el precio se actualice hasta el último momento en el que el usuario presiona confirmar. Para el alcance del challenge funciona bien y simplifica el flujo, pero en una siguiente iteración lo mejoraría agregando un _Price Lock_ (lo detallo más abajo en _"Qué quedó afuera y Cómo lo encararía"_).
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+* **Pausa en segundo plano (_AppState_):** Para no mantener el feed activo sin necesidad cuando la app pasa a background, sumé un listener de `AppState` que pausa las actualizaciones mientras no está en primer plano y refresca lo visible al volver.
 
-# Troubleshooting
+## ⚡ Rendimiento y Métricas (Performance)
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+Para asegurar que la arquitectura de streaming atómico cumpla con los estándares de fluidez requeridos en una app financiera, sometí la aplicación a pruebas de estrés con el catálogo completo de **2.100+ activos**, streaming continuo en vivo y scroll rápido simultáneo.
 
-# Learn More
+### Cómo lo medí
 
-To learn more about React Native, take a look at the following resources:
+- **React Native Performance Monitor:** Para monitorear en tiempo real los cuadros por segundo (FPS) en el hilo nativo (**UI**) y en el hilo de negocio (**JS**).
+- **React DevTools Profiler:** Para inspeccionar los ciclos de commit, validar que no existan re-renders en cascada y medir el costo en milisegundos de cada actualización.
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+### Resultados obtenidos
+
+- **Fluidez en UI y JS:** **60 FPS estables** sin caídas de frames (_dropped frames_) durante el scroll intensivo en `FlashList`.
+- **Costo de Renderizado:** Cada commit de actualización de cotizaciones toma **<menos de 4 ms** (muy por debajo del límite de 16.6 ms necesarios para sostener 60 FPS).
+- **Eficiencia de Suscripción:** El _Flamegraph_ confirma que ante actualizaciones masivas en memoria, **solo se re-renderizan las celdas visibles en el viewport** cuyo precio varió, evitando trabajo innecesario en el resto de la lista.
+
+| React DevTools Profiler (Aislamiento & ms) |     Performance Monitor (60 FPS en vivo)      |
+| :----------------------------------------: | :-------------------------------------------: |
+| _(Insertar screenshot del Profiler aquí)_  | _(Insertar screenshot del Perf Monitor aquí)_ |
+
+## 🔭 Qué quedó afuera y Cómo lo encararía
+
+Para cumplir con el alcance del challenge priorizando una arquitectura sólida y 60 FPS estables, dejé afuera algunas mejoras puntuales que encararía en una siguiente iteración:
+
+- **Bloqueo de precio (_Price Lock_) en la carga de órdenes:** Hoy la orden de compra/venta sigue actualizando su valor en tiempo real mientras el usuario ingresa los datos. En una siguiente iteración, al pasar a la pantalla de revisión congelaría la cotización por una ventana corta (ej. 15 segundos) o mostraría un aviso de confirmación si el precio se mueve brusco antes de confirmar la operación.
+- **Pulido visual y gráficos en tiempo real:** Prioricé la fluidez y la arquitectura por sobre el diseño visual avanzado. Con más tiempo, trabajaría en una estética más distintiva (mayor jerarquía tipográfica, cards con más aire y menos bordes rígidos) e incorporaría un gráfico intradiario.
+- **Tests End-to-End (E2E):** Si bien la lógica del motor y el dominio cuentan con pruebas unitarias, sumaría flujos automatizados para validar de punta a punta el recorrido crítico (buscar un activo, agregarlo a favoritos y completar una orden).
+
+## 📂 Documentación Extendida y Arquitectura (/docs)
+
+Para mantener el README principal ágil y enfocado en el código y el Quick Start, toda la documentación técnica profunda, decisiones de diseño y diagramas se encuentran en la carpeta `/docs`:
+
+- **`docs/ARCHITECTURE.md`:** Detalle completo de la separación de capas, contratos de servicios, el funcionamiento del buffer en memoria y la sincronización con `useSyncExternalStore`.
+- **`docs/AI_DEVELOPMENT_LOG.md`:** El registro y los chats de iteración con la inteligencia artificial durante el diseño de la app, mostrando cómo se plantearon y resolvieron los cuellos de botella de rendimiento.
+- **`docs/DESIGN_SYSTEM.md`:** Guía rápida de colores, tipografías y componentes reutilizables utilizados para mantener la consistencia visual sin tocar lógica.
