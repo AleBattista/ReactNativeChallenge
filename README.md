@@ -87,12 +87,12 @@ Para asegurar que la arquitectura de streaming atómico cumpla con los estándar
 
 ### Resultados obtenidos
 * **Fluidez en UI:** Cercana a 60 FPS en pruebas de estrés con el catálogo completo, streaming continuo y scroll intensivo en modo desarrollo/emulador. Como el contador del monitor es acumulado durante toda la sesión, es esperable que los *dropped frames* (cuadros sueltos que no llegan a tiempo) y los *stutters (4+)* (trabones más notorios de 4 o más cuadros seguidos) suban con los minutos de uso y navegación (por ejemplo, tras ~10 minutos de prueba continua). En la práctica, el movimiento se mantiene fluido y sin bloqueos prolongados.
-* **Costo de Renderizado:** Cada commit de actualización de cotizaciones toma menos de 4 ms (muy por debajo del límite de 16,6 ms que tenemos por cuadro para sostener 60 FPS), dejando margen libre para responder al scroll y a la interacción del usuario.
+* **Costo de Renderizado y Eficiencia de Suscripción:** En la captura del Flamegraph (commit `11 / 44`), contenedores superiores como `MarketScreen`, `MarketSearchBarBase (Memo)` y `FlashList (Memo)` permanecen sin re-renderizar mientras la actividad se concentra en un subárbol puntual dentro de `MarketItemRow`, con duraciones del orden de fracciones de milisegundo (`0.2ms of 0.5ms` en el nodo inspeccionado).
 * **Eficiencia de Suscripción:** El Flamegraph confirma que ante actualizaciones masivas en memoria, solo se re-renderizan las celdas visibles en el *viewport* cuyo precio varió, evitando trabajo innecesario en el resto de la lista.
 
 | React DevTools Profiler (Aislamiento & ms) |     Performance Monitor (60 FPS en vivo)      |
 | :----------------------------------------: | :-------------------------------------------: |
-| _(Insertar screenshot del Profiler aquí)_  | ![Performance Monitor](./docs/screenshots/perf-monitor.png) |
+| ![ DevTools Profiler](./docs/screenshots/devtools-profiler.png)  | ![Performance Monitor](./docs/screenshots/perf-monitor.png) |
 
 ## 🔭 Qué quedó afuera y Cómo lo encararía
 
