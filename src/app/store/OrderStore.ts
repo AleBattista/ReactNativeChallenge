@@ -43,6 +43,10 @@ interface OrderPersistedState {
 }
 
 export interface OrderStoreState extends OrderPersistedState {
+  /** Indica si el historial de órdenes ya terminó de rehidratarse desde AsyncStorage. */
+  readonly hasHydrated: boolean;
+  /** Actualiza el flag de hidratación al finalizar `onRehydrateStorage`. */
+  readonly setHasHydrated: (hydrated: boolean) => void;
   /**
    * Registra una nueva orden en estado `'PENDING'` al inicio del historial
    * (de más nueva a más vieja) y dispara el temporizador en segundo plano
@@ -111,6 +115,11 @@ export const useOrderStore = create<OrderStoreState>()(
 
       return {
         orders: [],
+        hasHydrated: false,
+
+        setHasHydrated: (hydrated: boolean): void => {
+          set({ hasHydrated: hydrated });
+        },
 
         placeOrder: (input: PlaceOrderInput): StoredOrder => {
           const now = Date.now();
@@ -235,7 +244,12 @@ export const useOrderStore = create<OrderStoreState>()(
         orders: state.orders,
       }),
       onRehydrateStorage: () => state => {
-        state?.resumePendingOrders();
+        if (state) {
+          state.setHasHydrated(true);
+          state.resumePendingOrders();
+        } else {
+          useOrderStore.setState({ hasHydrated: true });
+        }
       },
     },
   ),

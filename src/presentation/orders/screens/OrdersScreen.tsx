@@ -1,6 +1,6 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import {
   useOrderStore,
   type StoredOrder,
@@ -50,9 +50,33 @@ export function OrdersScreen({ navigation }: OrdersScreenProps) {
 
   const cashBalance = usePortfolioStore(state => state.cashBalance);
   const holdings = usePortfolioStore(state => state.holdings);
+  const hasPortfolioHydrated = usePortfolioStore(state => state.hasHydrated);
   const orders = useOrderStore(state => state.orders);
+  const hasOrdersHydrated = useOrderStore(state => state.hasHydrated);
 
   const [activeTab, setActiveTab] = useState<OrdersScreenTab>('HOLDINGS');
+
+  // Sincronización defensiva por si el middleware persist ya completó o termina mientras está montado
+  useEffect(() => {
+    if (usePortfolioStore.persist?.hasHydrated?.() && !hasPortfolioHydrated) {
+      usePortfolioStore.getState().setHasHydrated(true);
+    }
+    if (useOrderStore.persist?.hasHydrated?.() && !hasOrdersHydrated) {
+      useOrderStore.getState().setHasHydrated(true);
+    }
+    const unsubPortfolio = usePortfolioStore.persist?.onFinishHydration?.(() => {
+      usePortfolioStore.getState().setHasHydrated(true);
+    });
+    const unsubOrders = useOrderStore.persist?.onFinishHydration?.(() => {
+      useOrderStore.getState().setHasHydrated(true);
+    });
+    return () => {
+      unsubPortfolio?.();
+      unsubOrders?.();
+    };
+  }, [hasPortfolioHydrated, hasOrdersHydrated]);
+
+  const isHydrated = hasPortfolioHydrated && hasOrdersHydrated;
 
   const safeHoldings = useMemo(() => holdings ?? [], [holdings]);
   const safeOrders = useMemo(() => orders ?? [], [orders]);
@@ -143,6 +167,26 @@ export function OrdersScreen({ navigation }: OrdersScreenProps) {
   );
 
   const isHoldingsTab = activeTab === 'HOLDINGS';
+
+  if (!isHydrated) {
+    return (
+      <View
+        style={[
+          styles.loadingContainer,
+          {
+            backgroundColor: colors.background,
+            padding: spacing.xl,
+            gap: spacing.md,
+          },
+        ]}>
+        <ActivityIndicator size="large" color={colors.accent} />
+        <AppText variant="bodyStrong">Sincronizando portfolio...</AppText>
+        <AppText variant="caption" color="textSecondary" style={styles.centeredText}>
+          Recuperando tu saldo, tenencias e historial guardado
+        </AppText>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -401,6 +445,11 @@ export function OrdersScreen({ navigation }: OrdersScreenProps) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerPanel: {
     borderBottomWidth: StyleSheet.hairlineWidth,

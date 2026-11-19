@@ -40,6 +40,10 @@ interface PortfolioPersistedState {
 }
 
 export interface PortfolioStoreState extends PortfolioPersistedState {
+  /** Indica si el store ya terminó de rehidratarse desde AsyncStorage. */
+  readonly hasHydrated: boolean;
+  /** Actualiza el flag de hidratación al finalizar `onRehydrateStorage`. */
+  readonly setHasHydrated: (hydrated: boolean) => void;
   /** Obtiene la tenencia actual de un activo (si existe). */
   readonly getHolding: (ticker: Ticker) => PortfolioHolding | undefined;
   /** Verifica sin mutar si el saldo disponible alcanza para la compra. */
@@ -77,6 +81,11 @@ export const usePortfolioStore = create<PortfolioStoreState>()(
     (set, get) => ({
       cashBalance: INITIAL_CASH_BALANCE,
       holdings: [],
+      hasHydrated: false,
+
+      setHasHydrated: (hydrated: boolean) => {
+        set({ hasHydrated: hydrated });
+      },
 
       getHolding: (ticker: Ticker) => {
         const normalized = ticker.trim().toUpperCase();
@@ -295,6 +304,13 @@ export const usePortfolioStore = create<PortfolioStoreState>()(
         cashBalance: state.cashBalance,
         holdings: state.holdings,
       }),
+      onRehydrateStorage: () => state => {
+        if (state) {
+          state.setHasHydrated(true);
+        } else {
+          usePortfolioStore.setState({ hasHydrated: true });
+        }
+      },
     },
   ),
 );
